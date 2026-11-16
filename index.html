@@ -33,7 +33,7 @@ const CONFIG = {
   // Nachricht, die nach jedem gewonnenen Spiel erscheint (Liebesbotschaft, Gutschein, Hinweis auf ein Versteck ...)
   tage: {
     1:  "Der Countdown läuft! 24 kleine Überraschungen warten auf dich. Schön, dass es dich gibt. ❤️",
-    2:  "Gutschein: Eine heisse Schoggi mit extra viel Rahm – eingelöst, wann immer du willst. ☕",
+    2:  "Druck uf de Link ❤️",
     3:  "Weisst du noch, als wir … (hier eure gemeinsame Erinnerung einfügen) 😊",
     4:  "Du hast heute einen Wunsch frei. Einfach aussprechen! ✨",
     5:  "Schau mal in deine Jackentasche … 👀",
@@ -56,6 +56,11 @@ const CONFIG = {
     22: "Gutschein: Einmal Lieblingsessen, von mir gekocht. 🍝",
     23: "Morgen ist es so weit! Nur noch einmal schlafen. 😴",
     24: "" // Tag 24 zeigt den Weihnachtsbrief unten
+  },
+
+  // Bilder zum Herunterladen, die nach dem gewonnenen Spiel als Link erscheinen (Datei muss neben index.html liegen)
+  downloads: {
+    2: { datei: "gutschein-schoggi.png", text: "🎟️ Guetschin abelade" }
   },
 
   // Tag 3 – Wortsalat
@@ -154,6 +159,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .btn.primary{background:var(--red);color:#fff;box-shadow:0 4px 0 #8e1422}
 .btn.primary:active{transform:translateY(2px);box-shadow:0 2px 0 #8e1422}
 .btn.ghost{background:#00000010;color:var(--ink)}
+a.btn{text-decoration:none;text-align:center;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+.btn.dl{background:#2f9e5b;color:#fff;box-shadow:0 4px 0 #1d6b3b;margin:4px auto 14px}
 .intro{text-align:center;margin:auto 0;padding:10px 6px}
 .intro .ic{font-size:84px;line-height:1.1}
 .intro h2{font-family:Georgia,serif;margin:8px 0 6px;font-size:28px}
@@ -431,6 +438,21 @@ function runGame(d){
   };
   GAMES[d-1].play(stage, api);
 }
+/* Download-Link: Auf iPhone/Handy über das Teilen-Menü ("Bild sichern" → Fotos),
+   sonst normaler Download. Ohne Unterstützung öffnet sich einfach das Bild. */
+function dlButton(cfg){
+  const a = h('a',{class:'btn dl', href:cfg.datei, download:cfg.datei}, cfg.text);
+  let file = null;
+  fetch(cfg.datei).then(r=>r.ok?r.blob():null).then(b=>{ if(b) file=new File([b], cfg.datei, {type:b.type||'image/png'}); }).catch(()=>{});
+  a.addEventListener('click', e=>{
+    const touch = window.matchMedia && matchMedia('(pointer:coarse)').matches;
+    if(touch && file && navigator.canShare && navigator.canShare({files:[file]})){
+      e.preventDefault();
+      navigator.share({files:[file]}).catch(err=>{ if(err && err.name!=='AbortError') location.href=cfg.datei; });
+    }
+  });
+  return a;
+}
 function showWin(d, extra, again){
   cleanup(); runToken++; setStatus(''); stage.innerHTML='';
   if (extra===null || extra===undefined){ const s=store.get()[d]; if(s && s.extra) extra=s.extra; }
@@ -438,6 +460,7 @@ function showWin(d, extra, again){
   stage.append(h('div',{class:'win'},
     h('div',{class:'big'}, d===24?'🎄':'🎉'), h('h3',{}, again?'Deine Belohnung':(d===24?'Frohe Weihnachten!':'Geschafft!')),
     extra?h('div',{class:'extra'},extra):null, msg,
+    (CONFIG.downloads && CONFIG.downloads[d]) ? dlButton(CONFIG.downloads[d]) : null,
     h('button',{class:'btn primary',onclick:closeModal},'Zurück zum Kalender'),
     h('button',{class:'btn ghost',onclick:()=>runGame(d)},'Nochmal spielen')
   ));
