@@ -177,6 +177,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Ar
 .mcard.open{background:#fff;color:inherit;transform:scale(1.04);box-shadow:0 3px 0 #ccc}
 .mcard.open::after{content:none}
 .mcard.done{background:#d9f2e6;opacity:.8}
+.mcard.photo{padding:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.mcard.photo img{display:none;width:100%;height:100%;object-fit:cover}
+.mcard.photo.open img{display:block}
+.mcard.photo.done{opacity:1;box-shadow:0 0 0 3px #2fbf71}
 .sky{position:relative;width:100%;height:min(62vh,520px);border-radius:16px;overflow:hidden;background:linear-gradient(#18305f,#4b6cb7);touch-action:none}
 .flake{position:absolute;top:-60px;font-size:40px;width:54px;height:54px;display:grid;place-items:center;animation:fall linear forwards;cursor:pointer}
 .flake.hit{animation:poof .25s forwards}
@@ -471,16 +475,16 @@ function choiceQuiz(st, api, items, needed, emojiQ){
 
 /* ---------------- Die 24 Mini-Games ---------------- */
 const GAMES=[
-/* 1 */ { titel:'Weihnachts-Memory', icon:'🃏', info:'Finde alle 6 Paare. Tippe zwei Karten an – passen sie zusammen, bleiben sie offen.',
+/* 1 */ { titel:'Weihnachts-Memory', icon:'🃏', info:'Finde alle 4 Paare. Tippe zwei Karten an – passen sie zusammen, bleiben sie offen.',
   play(st,api){
-    const E=['🎄','⛄','🎁','🦌','🔔','⭐']; const deck=shuffle([...E,...E]);
+    const E=['memory1.jpg','memory2.jpg','memory3.jpg','memory4.jpg']; const deck=shuffle([...E,...E]);
     let first=null, lock=false, found=0, moves=0; const grid=h('div',{class:'cards'}); st.append(grid);
     api.status('Züge: 0');
-    deck.forEach(e=>{ const c=h('button',{class:'mcard'}, e); c.onclick=()=>{
+    deck.forEach(e=>{ const c=h('button',{class:'mcard photo','data-k':e}, h('img',{src:e,alt:'',draggable:'false'})); c.onclick=()=>{
       if(lock||c.classList.contains('open')) return; c.classList.add('open'); tone(600,.08);
       if(!first){ first=c; return; }
       moves++; api.status('Züge: '+moves);
-      if(first.textContent===c.textContent){ first.classList.add('done'); c.classList.add('done'); first=null; found++; tone(900,.15);
+      if(first.dataset.k===c.dataset.k){ first.classList.add('done'); c.classList.add('done'); first=null; found++; tone(900,.15);
         if(found===E.length) api.after(()=>api.win(`Gelöst in ${moves} Zügen!`),600); }
       else { lock=true; const a=first; first=null; api.after(()=>{ a.classList.remove('open'); c.classList.remove('open'); lock=false; },800); }
     }; grid.append(c); });
