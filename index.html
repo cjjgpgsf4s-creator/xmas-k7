@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#0b1633">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Adventskalender</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎄</text></svg>">
+
+<script>
+/* =====================================================================
+   🎄  HIER ANPASSEN  🎄
+   Alles, was persönlich ist, steht in diesem Block.
+   Texte einfach zwischen den Anführungszeichen "..." ersetzen.
+   ===================================================================== */
+const CONFIG = {
+  fuer: "dich",            // Name der beschenkten Person, z.B. "Anna"
+  von:  "Lorenz",          // dein Name
+  jahr: 2026,              // Jahr des Kalenders
+
+  // Geheimer Schlüssel: Die Seite öffnet sich nur mit ?k=DIESER-WERT im Link.
+  // Leer lassen ("") = kein Schutz.
+  schluessel: "sternenstaub-4821",
+
+  // Vorschau-Schlüssel nur für dich: mit &vorschau=DIESER-WERT sind alle Türchen offen.
+  vorschauSchluessel: "lorenz-test",
+
+  demo: false,             // true = alle Türchen offen, kein Schlüssel nötig (nur zum Testen)
+
+  // Nachricht, die nach jedem gewonnenen Spiel erscheint (Liebesbotschaft, Gutschein, Hinweis auf ein Versteck ...)
+  tage: {
+    1:  "Der Countdown läuft! 24 kleine Überraschungen warten auf dich. Schön, dass es dich gibt. ❤️",
+    2:  "Gutschein: Eine heisse Schoggi mit extra viel Rahm – eingelöst, wann immer du willst. ☕",
+    3:  "Weisst du noch, als wir … (hier eure gemeinsame Erinnerung einfügen) 😊",
+    4:  "Du hast heute einen Wunsch frei. Einfach aussprechen! ✨",
+    5:  "Schau mal in deine Jackentasche … 👀",
+    6:  "Heute ist Samichlaus! 🎅 Hoffentlich warst du dieses Jahr brav …",
+    7:  "Gutschein: Ein Abend auf dem Weihnachtsmarkt – Glühwein geht auf mich. 🍷",
+    8:  "Drei Dinge, die ich an dir mag: 1) … 2) … 3) …",
+    9:  "Gutschein: Ein Filmabend deiner Wahl mit Popcorn. 🍿",
+    10: "Fast schon die Hälfte geschafft! Du bist super. 💪",
+    11: "Gutschein: Frühstück ans Bett. 🥐",
+    12: "Eine kleine Überraschung wartet im Kühlschrank. 🧊",
+    13: "Gutschein: Eine Massage – 20 Minuten, ohne Diskussion. 💆",
+    14: "Heute bin ich dein persönlicher Chauffeur. 🚗",
+    15: "Ich freue mich riesig auf Weihnachten mit dir. 🎄",
+    16: "Gutschein: Gemeinsam Guetzli backen. 🍪",
+    17: "Ein Lied, das mich an dich erinnert: … 🎶",
+    18: "Gutschein: Ein Tag, an dem ich den Abwasch übernehme. 🧽",
+    19: "Nur noch 5 Türchen! Schon aufgeregt? 😄",
+    20: "Gutschein: Ein Spaziergang im Schnee mit anschliessendem Fondue. 🧀",
+    21: "Kürzester Tag des Jahres – aber der schönste mit dir. ☀️",
+    22: "Gutschein: Einmal Lieblingsessen, von mir gekocht. 🍝",
+    23: "Morgen ist es so weit! Nur noch einmal schlafen. 😴",
+    24: "" // Tag 24 zeigt den Weihnachtsbrief unten
+  },
+
+  // Tag 3 – Wortsalat
+  wortsalat: { wort: "ZIMTSTERN", tipp: "Ein Guetzli, das nach Weihnachten duftet" },
+
+  // Tag 4 – Quiz (ersetze das gerne durch Fragen über euch!)  richtig = Nummer der richtigen Antwort (0 = erste)
+  quiz: [
+    { frage: "Wie heisst das Rentier mit der roten Nase?", antworten: ["Rudolph", "Blitzen", "Comet", "Dancer"], richtig: 0 },
+    { frage: "In welchem Land wohnt der Weihnachtsmann (laut Finnen)?", antworten: ["Finnland", "Kanada", "Island", "Norwegen"], richtig: 0 },
+    { frage: "In welcher Stadt wurde der Adventskranz erfunden?", antworten: ["Hamburg", "Wien", "Zürich", "Rom"], richtig: 0 }
+  ],
+
+  // Tag 14 – Galgenmännchen
+  galgen: { wort: "LEBKUCHENHERZ", tipp: "Hängt am Weihnachtsmarkt an jeder Bude" },
+
+  // Tag 17 – Emoji-Rätsel (erste Antwort = richtig, wird beim Spielen gemischt)
+  emojiRaetsel: [
+    { emoji: "❄️👸",       antworten: ["Die Eiskönigin", "Schneewittchen", "Cinderella", "Rapunzel"] },
+    { emoji: "🏠👦✈️👨‍👩‍👧", antworten: ["Kevin – Allein zu Haus", "Der Grinch", "Polarexpress", "Tatsächlich Liebe"] },
+    { emoji: "💚😠🎄",     antworten: ["Der Grinch", "Shrek", "Hulk", "Buddy der Weihnachtself"] },
+    { emoji: "🚂❄️🎅",     antworten: ["Der Polarexpress", "Harry Potter", "Mord im Orient-Express", "Die Eiskönigin"] }
+  ],
+
+  // Tag 20 – Wahr oder Falsch
+  wahrFalsch: [
+    { aussage: "Der Samichlaus kommt in der Schweiz am 6. Dezember.", wahr: true },
+    { aussage: "Rentiere können nicht schwimmen.", wahr: false },
+    { aussage: "Schneekristalle haben meistens sechs Arme.", wahr: true },
+    { aussage: "Der Weihnachtsstern ist eigentlich ein Kaktus.", wahr: false },
+    { aussage: "Heiligabend ist am 24. Dezember.", wahr: true }
+  ],
+
+  // Tag 21 – Was unter dem Rubbellos steht
+  rubbellos: "🎟️ Gutschein für einen Fondue-Abend zu zweit!",
+
+  // Tag 23 – Felder auf dem Glücksrad (kurz halten!)
+  gluecksrad: ["Frühstück ans Bett", "Kinoabend", "Massage", "Wunsch frei", "Guetzli backen", "Wellness-Tag"],
+
+  // Tag 24 – Der Weihnachtsbrief
+  brief: "Liebe/r …,\n\n24 Tage, 24 Türchen – und hinter jedem steckt ein kleines Stück davon, wie gern ich dich habe.\n\nDanke für dieses Jahr mit dir. Ich freue mich auf alles, was noch kommt.\n\nFrohe Weihnachten! 🎄\n\nIn Liebe\nLorenz"
+};
+</script>
+
+<style>
+:root{--bg1:#0b1633;--gold:#ffd166;--red:#d62839;--green:#2a9d8f;--ink:#22223b;--paper:#fffaf0}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+html{background:#050918}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#fff;
+  background:radial-gradient(130% 70% at 50% 0%,#28468a 0%,var(--bg1) 55%,#050918 100%) fixed;
+  overscroll-behavior:none;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#snow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+#app{position:relative;z-index:1;max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 20px) 12px calc(env(safe-area-inset-bottom) + 28px)}
+.hero{text-align:center;margin:4px 0 18px}
+.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(32px,10vw,46px);margin:0;line-height:1.05;text-shadow:0 3px 16px #000a}
+.hero .for{color:var(--gold);font:italic 21px Georgia,serif;margin-top:4px}
+.hero .count{display:inline-block;margin-top:12px;padding:7px 15px;border-radius:99px;background:#ffffff14;border:1px solid #ffffff26;font-size:14px}
+.hero .pv{display:inline-block;margin-top:8px;font-size:12px;padding:3px 10px;border-radius:99px;background:var(--gold);color:#3a2a00;font-weight:700}
+.board{position:relative;background:linear-gradient(160deg,#6b4430,#3b2418);border-radius:20px;padding:12px 10px 10px;
+  box-shadow:0 14px 40px #000a, inset 0 0 0 3px #8a5c40, inset 0 0 0 7px #3b2418}
+.board::before{content:"";position:absolute;left:8px;right:8px;top:-9px;height:20px;border-radius:12px;
+  background:radial-gradient(circle at 10% 60%,#fff 9px,transparent 10px),radial-gradient(circle at 30% 50%,#fff 11px,transparent 12px),radial-gradient(circle at 52% 60%,#fff 9px,transparent 10px),radial-gradient(circle at 73% 45%,#fff 12px,transparent 13px),radial-gradient(circle at 92% 60%,#fff 9px,transparent 10px),linear-gradient(#fff,#fff) center 70%/100% 8px no-repeat;filter:drop-shadow(0 2px 2px #0005)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.door{position:relative;border:0;padding:0;background:#24160d;border-radius:10px;aspect-ratio:10/13;cursor:pointer;
+  box-shadow:inset 0 0 0 2px #0006, 0 2px 4px #0006;transition:transform .15s}
+.door svg{width:100%;height:100%;display:block;border-radius:10px;transition:filter .8s}
+.door.locked svg{filter:grayscale(1) brightness(.78) contrast(1.08)}
+.door .lock{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:12px;opacity:.85}
+.door:active{transform:scale(.94)}
+.door.today{animation:glow 1.8s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 0 2px var(--gold),0 0 8px #ffd16688}50%{box-shadow:0 0 0 3px var(--gold),0 0 24px #ffd166}}
+.door .badge{position:absolute;top:-7px;right:-6px;font-size:19px;filter:drop-shadow(0 1px 2px #000a)}
+.shake{animation:shake .45s}
+@keyframes shake{20%{transform:translateX(-5px) rotate(-2deg)}40%{transform:translateX(5px) rotate(2deg)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.foot{text-align:center;margin-top:18px;font-size:13px;opacity:.7}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,30px);opacity:0;z-index:30;
+  background:#fff;color:var(--ink);padding:11px 18px;border-radius:14px;font-size:15px;box-shadow:0 8px 24px #0008;transition:.3s;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.gate{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:.85}
+.gate div{font-size:64px}
+
+/* Modal */
+.modal{position:fixed;inset:0;z-index:10;background:#050918cc;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center}
+.modal[hidden]{display:none}
+.sheet{width:100%;max-width:560px;height:100%;background:linear-gradient(#fffaf0,#f3e7d2);color:var(--ink);display:flex;flex-direction:column;animation:up .3s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+@media(min-width:620px){.modal{align-items:center}.sheet{height:auto;min-height:600px;max-height:94vh;border-radius:24px;overflow:hidden}}
+.sheet header{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 12px) 14px 10px 16px;border-bottom:1px solid #0000000f}
+.sheet header .day{background:var(--red);color:#fff;font-weight:800;border-radius:10px;min-width:38px;height:38px;display:grid;place-items:center;font-size:18px}
+.sheet header strong{flex:1;font-size:18px}
+.xbtn{border:0;background:#0000000d;width:40px;height:40px;border-radius:50%;font-size:18px;color:var(--ink);cursor:pointer}
+.status{min-height:26px;text-align:center;font-weight:700;padding:6px 10px 0;font-size:16px}
+.stage{flex:1;overflow:auto;padding:8px 14px calc(env(safe-area-inset-bottom) + 22px);position:relative;display:flex;flex-direction:column;align-items:center}
+.stage > *{max-width:100%}
+.btn{display:block;width:100%;max-width:340px;margin:10px auto 0;border:0;border-radius:14px;padding:15px 18px;font-size:17px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--red);color:#fff;box-shadow:0 4px 0 #8e1422}
+.btn.primary:active{transform:translateY(2px);box-shadow:0 2px 0 #8e1422}
+.btn.ghost{background:#00000010;color:var(--ink)}
+.intro{text-align:center;margin:auto 0;padding:10px 6px}
+.intro .ic{font-size:84px;line-height:1.1}
+.intro h2{font-family:Georgia,serif;margin:8px 0 6px;font-size:28px}
+.intro p{font-size:16px;line-height:1.45;opacity:.85;margin:0 auto 14px;max-width:340px}
+.win{text-align:center;width:100%;margin:auto 0;padding-bottom:10px}
+.win .big{font-size:76px;animation:pop .5s}
+.win h3{font-family:Georgia,serif;font-size:30px;margin:2px 0 12px}
+@keyframes pop{0%{transform:scale(.2)}70%{transform:scale(1.2)}}
+.msgcard{background:#fff;border-radius:16px;padding:18px;margin:0 auto 6px;max-width:360px;font-size:17px;line-height:1.5;white-space:pre-line;box-shadow:0 6px 20px #0001, inset 0 0 0 2px #ffd16655;text-align:center}
+.letter{text-align:left;font-family:Georgia,serif;font-size:17px;background:repeating-linear-gradient(#fff 0 30px,#e9eef8 30px 31px);line-height:31px;padding:16px 20px}
+.extra{font-size:18px;font-weight:700;margin-bottom:12px}
+.lose{text-align:center;margin:auto 0}
+.lose .big{font-size:70px}
+.lose p{font-size:17px;max-width:320px;margin:8px auto 10px}
+
+/* Spiele */
+.gcv{display:block;border-radius:16px;touch-action:none;box-shadow:0 4px 14px #0002}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;width:100%;max-width:380px;margin-top:8px}
+.mcard{aspect-ratio:3/4;border:0;border-radius:12px;font-size:34px;cursor:pointer;background:linear-gradient(135deg,#d62839,#9d1626);color:transparent;box-shadow:0 3px 0 #6d0f1a;transition:transform .25s, background .25s}
+.mcard::after{content:"❄️";color:#fff;font-size:26px}
+.mcard.open{background:#fff;color:inherit;transform:scale(1.04);box-shadow:0 3px 0 #ccc}
+.mcard.open::after{content:none}
+.mcard.done{background:#d9f2e6;opacity:.8}
+.sky{position:relative;width:100%;height:min(62vh,520px);border-radius:16px;overflow:hidden;background:linear-gradient(#18305f,#4b6cb7);touch-action:none}
+.flake{position:absolute;top:-60px;font-size:40px;width:54px;height:54px;display:grid;place-items:center;animation:fall linear forwards;cursor:pointer}
+.flake.hit{animation:poof .25s forwards}
+@keyframes fall{to{transform:translateY(calc(min(62vh,520px) + 80px)) rotate(240deg)}}
+@keyframes poof{to{transform:scale(1.8);opacity:0}}
+.tiles{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:10px 0;min-height:52px}
+.tile{width:42px;height:48px;border:0;border-radius:10px;font-size:22px;font-weight:800;background:#fff;color:var(--ink);box-shadow:0 3px 0 #0002;cursor:pointer}
+.tile.slot{background:#ffd16655;box-shadow:inset 0 0 0 2px #e0a800}
+.answer.bad .tile{background:#ffd6d6}
+.hint{font-size:15px;opacity:.75;text-align:center;margin:4px 0 2px}
+.quiz{width:100%;max-width:380px;text-align:center}
+.q{font-size:20px;font-weight:700;margin:12px 0 16px;line-height:1.35}
+.q.emoji{font-size:58px;letter-spacing:4px}
+.choice{display:block;width:100%;margin:8px 0;padding:15px;border:0;border-radius:14px;background:#fff;font-size:17px;font-weight:600;color:var(--ink);box-shadow:0 3px 0 #0002;cursor:pointer}
+.choice.ok{background:#2a9d8f;color:#fff}
+.choice.bad{background:#d62839;color:#fff}
+.react{width:min(82vw,320px);aspect-ratio:1;border:0;border-radius:50%;background:radial-gradient(#7b5a3c,#4e3420);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;margin-top:14px;box-shadow:0 8px 24px #0003}
+.react .deer{font-size:96px;line-height:1}
+.react .nose{width:58px;height:58px;border-radius:50%;background:#555;margin-top:-6px;transition:background .05s;box-shadow:inset 0 -4px 0 #0003}
+.react.go .nose{background:#ff2a2a;box-shadow:0 0 30px #ff2a2a,0 0 60px #ff2a2a88}
+.rmsg{margin-top:14px;font-size:18px;font-weight:700;text-align:center;min-height:50px}
+.pads{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(84vw,330px);margin-top:12px}
+.pad{aspect-ratio:1;border:0;border-radius:24px;font-size:46px;opacity:.55;cursor:pointer;transition:opacity .1s,transform .1s}
+.pad.lit{opacity:1;transform:scale(1.05);box-shadow:0 0 26px currentColor}
+.slide{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:min(84vw,320px);margin-top:12px;background:#3b2418;padding:7px;border-radius:16px}
+.slide button{aspect-ratio:1;border:0;border-radius:12px;font-size:32px;font-weight:800;color:#fff;background:linear-gradient(135deg,#2a9d8f,#1f6f66);box-shadow:0 3px 0 #0004;cursor:pointer}
+.slide button.empty{background:transparent;box-shadow:none}
+.holes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:min(88vw,340px);margin-top:12px}
+.hole{aspect-ratio:1;border:0;border-radius:50%;background:radial-gradient(#3d2a1c 55%,#6b4a32 57%);font-size:48px;cursor:pointer;display:grid;place-items:center}
+.hole span{animation:popup .15s}
+@keyframes popup{from{transform:translateY(20px) scale(.5)}}
+.row{display:flex;gap:8px;width:100%;max-width:340px;margin-top:12px}
+.row input{flex:1;font-size:22px;padding:12px;border-radius:12px;border:2px solid #0002;text-align:center;min-width:0}
+.row .btn{margin:0;width:auto}
+.log{width:100%;max-width:340px;margin-top:12px;font-size:17px}
+.log div{background:#fff;border-radius:10px;padding:8px 12px;margin:5px 0;display:flex;justify-content:space-between}
+.ttt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(82vw,320px);margin-top:12px}
+.ttt button{aspect-ratio:1;border:0;border-radius:16px;background:#fff;font-size:52px;box-shadow:0 3px 0 #0002;cursor:pointer}
+.ttt button.w{background:#ffd166}
+.cookie{border:0;background:none;font-size:150px;cursor:pointer;margin-top:20px;transition:transform .06s;line-height:1}
+.cookie:active{transform:scale(.9) rotate(-6deg)}
+.bar{width:100%;max-width:320px;height:14px;background:#0001;border-radius:99px;overflow:hidden;margin-top:14px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#d62839);transition:width .15s}
+.candles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(86vw,340px);margin-top:12px}
+.candles button{aspect-ratio:1;border:0;border-radius:14px;background:#2b2140;font-size:36px;cursor:pointer;filter:grayscale(1) brightness(.6);transition:.2s}
+.candles button.on{background:#ffe8a3;filter:none;box-shadow:0 0 16px #ffd166}
+.word{font-size:28px;font-weight:800;letter-spacing:5px;margin:12px 0 4px;text-align:center;word-break:break-all}
+.keys{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:380px;margin-top:10px}
+.keys button{width:34px;height:44px;border:0;border-radius:8px;background:#fff;font-size:17px;font-weight:700;color:var(--ink);box-shadow:0 2px 0 #0002;cursor:pointer}
+.keys button:disabled{opacity:.25}
+.keys button.y{background:#2a9d8f;color:#fff;opacity:1}
+.odd{display:grid;gap:6px;width:min(88vw,340px);margin-top:12px}
+.odd button{aspect-ratio:1;border:0;background:#fff;border-radius:10px;cursor:pointer;padding:0;box-shadow:0 2px 0 #0002}
+.cups{position:relative;width:min(90vw,340px);height:170px;margin-top:30px}
+.cup{position:absolute;bottom:0;width:30%;height:120px;border:0;background:none;font-size:80px;cursor:pointer;transition:left .4s ease-in-out, transform .3s;padding:0}
+.cup.up{transform:translateY(-30px)}
+.pad4{display:grid;grid-template-columns:repeat(3,64px);gap:6px;margin-top:10px;justify-content:center}
+.pad4 button{height:56px;border:0;border-radius:12px;background:#fff;font-size:24px;box-shadow:0 3px 0 #0002;cursor:pointer}
+.gift{border:0;background:none;font-size:130px;cursor:pointer;margin-top:30px;line-height:1;transition:transform .1s}
+.wiggle{animation:wig .25s}
+@keyframes wig{25%{rotate:-12deg}75%{rotate:12deg}}
+.scratch{position:relative;width:min(86vw,330px);height:200px;margin-top:16px;border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 6px 20px #0002}
+.scratch .prize{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;font-size:21px;font-weight:800;line-height:1.35;background:radial-gradient(#fff7d6,#ffe08a)}
+.scratch canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;transition:opacity .8s}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+</style>
+</head>
+<body>
+<canvas id="snow"></canvas>
+<div id="app"></div>
+
+<div id="modal" class="modal" hidden>
+  <div class="sheet">
+    <header><div class="day" id="mDay">1</div><strong id="mName"></strong><button class="xbtn" id="mClose" aria-label="Schliessen">✕</button></header>
+    <div class="status" id="mStatus"></div>
+    <div class="stage" id="mStage"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<canvas id="confetti"></canvas>
+
+<script>
+/* ---------------- Hilfsfunktionen ---------------- */
+const $ = s => document.querySelector(s);
+function h(tag, props, ...kids){
+  const e = document.createElement(tag);
+  for (const [k,v] of Object.entries(props||{})){
+    if (k==='class') e.className = v;
+    else if (k==='style') e.style.cssText = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  }
+  for (const c of kids.flat()){ if (c==null || c===false) continue; e.append(c.nodeType ? c : document.createTextNode(c)); }
+  return e;
+}
+const rnd = n => Math.floor(Math.random()*n);
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; };
+const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+let actx;
+function tone(f, d=.22, type='sine', vol=.25){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    if (actx.state==='suspended') actx.resume();
+    const o=actx.createOscillator(), g=actx.createGain(), t=actx.currentTime;
+    o.type=type; o.frequency.value=f;
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t+d+.05);
+  }catch(e){}
+}
+const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms) }catch(e){} };
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast.id); toast.id=setTimeout(()=>t.classList.remove('show'),2200); }
+
+const STORE_KEY = 'advent-'+CONFIG.jahr;
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)||'{}') }catch(e){ return {} } },
+  set(o){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(o)) }catch(e){} }
+};
+const params = new URLSearchParams(location.search);
+const allowed = CONFIG.demo || !CONFIG.schluessel || params.get('k')===CONFIG.schluessel;
+const preview = CONFIG.demo || (!!CONFIG.vorschauSchluessel && params.get('vorschau')===CONFIG.vorschauSchluessel);
+function isOpen(d){ return preview || new Date() >= new Date(CONFIG.jahr, 11, d); }
+function todayNum(){ const n=new Date(); return (n.getFullYear()===CONFIG.jahr && n.getMonth()===11) ? n.getDate() : 0; }
+
+/* ---------------- Schnee im Hintergrund ---------------- */
+(function snow(){
+  const cv=$('#snow'), ctx=cv.getContext('2d'); let W,H,fl=[];
+  const size=()=>{ W=cv.width=innerWidth; H=cv.height=innerHeight; };
+  size(); addEventListener('resize', size);
+  for(let i=0;i<70;i++) fl.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*2.6,s:.3+Math.random()*.9,o:Math.random()*6});
+  (function loop(t){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#fff';
+    for(const f of fl){ f.y+=f.s; f.x+=Math.sin(t/1600+f.o)*.35; if(f.y>H+5){f.y=-5;f.x=Math.random()*W;}
+      ctx.globalAlpha=.35+f.r/5; ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,7); ctx.fill(); }
+    requestAnimationFrame(loop);
+  })(0);
+})();
+
+/* ---------------- Konfetti ---------------- */
+function confetti(){
+  const cv=$('#confetti'), ctx=cv.getContext('2d'); const W=cv.width=innerWidth, H=cv.height=innerHeight;
+  const cols=['#d62839','#ffd166','#2a9d8f','#fff','#7bdff2','#f4a261'];
+  const ps=Array.from({length:140},()=>({x:W/2+(Math.random()-.5)*80,y:H*.45,vx:(Math.random()-.5)*14,vy:-6-Math.random()*12,r:Math.random()*6.3,s:4+Math.random()*6,c:cols[rnd(cols.length)],vr:(Math.random()-.5)*.4}));
+  const t0=performance.now();
+  (function loop(t){
+    ctx.clearRect(0,0,W,H);
+    for(const p of ps){ p.vy+=.35; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.r); ctx.fillStyle=p.c; ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); ctx.restore(); }
+    if (t-t0<3200) requestAnimationFrame(loop); else ctx.clearRect(0,0,W,H);
+  })(t0);
+}
+
+/* ---------------- Türchen (SVG) ---------------- */
+const COLORS=['#d62839','#2a9d8f','#e9a23b','#3a6ea5','#8e44ad','#c0392b','#16a085','#d35400','#2c7a4b','#b83280','#1f6feb','#a0522d',
+              '#e63946','#118ab2','#f4a261','#6a4c93','#06a77d','#c1121f','#457b9d','#bc6c25','#9b2226','#0a9396','#ca6702','#7b2cbf'];
+const ICONS=['⭐','🎄','🔔','🎁','❄️','🎅','🦌','🍪','🕯️','⛄','🧦','🍬','🌟','🎀','🧣','☕','🪵','🛷','🍊','🧁','🎶','🌲','🤶','💝'];
+function doorSVG(d){
+  const c=COLORS[d-1], v=(d*5)%4, ic=ICONS[d-1];
+  const knob='#ffd166', dark='rgba(0,0,0,.22)', light='rgba(255,255,255,.18)';
+  let body='';
+  if(v===0) body=`<rect x="12" y="14" width="76" height="108" rx="6" fill="${c}"/><rect x="21" y="24" width="58" height="34" rx="3" fill="${dark}"/><rect x="21" y="66" width="58" height="46" rx="3" fill="${dark}"/><circle cx="79" cy="62" r="3.4" fill="${knob}"/>`;
+  else if(v===1) body=`<path d="M12 122V52a38 38 0 0 1 76 0v70z" fill="${c}"/><path d="M22 112V54a28 28 0 0 1 56 0v58z" fill="${dark}"/><circle cx="76" cy="108" r="3.4" fill="${knob}"/>`;
+  else if(v===2) body=`<rect x="12" y="14" width="76" height="108" rx="38" fill="${c}"/><rect x="22" y="24" width="56" height="88" rx="28" fill="${dark}"/><circle cx="50" cy="114" r="3.4" fill="${knob}"/>`;
+  else body=`<rect x="12" y="14" width="37" height="108" rx="5" fill="${c}"/><rect x="51" y="14" width="37" height="108" rx="5" fill="${c}"/><rect x="18" y="22" width="25" height="92" rx="3" fill="${dark}"/><rect x="57" y="22" width="25" height="92" rx="3" fill="${dark}"/><circle cx="45" cy="112" r="3" fill="${knob}"/><circle cx="55" cy="112" r="3" fill="${knob}"/><rect x="26" y="66" width="48" height="36" rx="9" fill="${c}" stroke="rgba(0,0,0,.3)" stroke-width="2"/>`;
+  return `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="130" fill="#2b1a10"/><rect x="6" y="8" width="88" height="118" rx="9" fill="#1a0f08"/>
+    ${body}
+    <path d="M14 16 h72" stroke="${light}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M8 14 q8 -10 18 -2 q8 -9 18 -1 q9 -9 18 0 q9 -8 18 1 q6 -5 12 2 v6 h-84z" fill="#fff" opacity=".95"/>
+    <text x="50" y="46" text-anchor="middle" font-size="22" font-family='${EMOJI_FONT}'>${ic}</text>
+    <text x="50" y="${v===3?95:92}" text-anchor="middle" font-size="34" font-weight="800" font-family="Georgia,serif" fill="#fff" stroke="rgba(0,0,0,.35)" stroke-width="1.2">${d}</text>
+  </svg>`;
+}
+const ORDER=[7,15,1,22,10,4,18,13,24,3,20,9,16,6,12,21,2,11,19,8,14,23,5,17];
+
+/* ---------------- Startseite ---------------- */
+const app=$('#app');
+function countdownText(){
+  const now=new Date(), y=CONFIG.jahr, dec1=new Date(y,11,1), xmas=new Date(y,11,25);
+  if (now<dec1){ const n=Math.ceil((dec1-now)/864e5); return n===1?'Morgen öffnet sich das erste Türchen!':`Noch ${n} Tage bis zum ersten Türchen`; }
+  if (now<new Date(y,11,24)){ const n=24-now.getDate(); return `Heute ist Türchen ${now.getDate()} offen · noch ${n} ${n===1?'Tag':'Tage'} bis Heiligabend`; }
+  if (now<xmas) return 'Heiligabend! Das letzte Türchen ist offen 🎁';
+  return 'Frohe Weihnachten! 🎄';
+}
+function renderHome(){
+  app.innerHTML='';
+  if(!allowed){ app.append(h('div',{class:'gate'}, h('div',{},'🔒'), h('p',{},'Dieser Kalender ist privat.'))); return; }
+  const done=store.get(), today=todayNum();
+  const grid=h('div',{class:'grid'});
+  for(const d of ORDER){
+    const open=isOpen(d);
+    const b=h('button',{class:'door'+(open?'':' locked')+(d===today?' today':''),'aria-label':'Türchen '+d});
+    b.innerHTML=doorSVG(d);
+    if(!open) b.append(h('span',{class:'lock'},'🔒'));
+    if(done[d]) b.append(h('span',{class:'badge'},'⭐'));
+    b.addEventListener('click',()=>{
+      if(!isOpen(d)){ b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); buzz(30);
+        toast(`Türchen ${d} öffnet am ${d}. Dezember 🤫`); return; }
+      openDay(d);
+    });
+    grid.append(b);
+  }
+  const n=Object.keys(done).length;
+  app.append(
+    h('div',{class:'hero'}, h('h1',{},'Adventskalender'), h('div',{class:'for'},'für '+CONFIG.fuer),
+      h('div',{class:'count'}, countdownText()), preview?h('div',{},h('span',{class:'pv'},'Vorschau – alle Türchen offen')):null),
+    h('div',{class:'board'}, grid),
+    h('div',{class:'foot'}, (n?`⭐ ${n} von 24 geschafft · `:'')+'Mit ❤️ von '+CONFIG.von)
+  );
+}
+
+/* ---------------- Spiel-Rahmen ---------------- */
+const modal=$('#modal'), stage=$('#mStage'), statusEl=$('#mStatus');
+let cleanups=[], runToken=0, currentDay=0;
+function cleanup(){ cleanups.forEach(f=>{try{f()}catch(e){}}); cleanups=[]; }
+function setStatus(t){ if(statusEl.textContent!==t) statusEl.textContent=t; }
+function closeModal(){ cleanup(); runToken++; modal.hidden=true; document.body.style.overflow=''; renderHome(); }
+$('#mClose').addEventListener('click', closeModal);
+
+function openDay(d){
+  currentDay=d; const g=GAMES[d-1];
+  $('#mDay').textContent=d; $('#mName').textContent=g.titel;
+  modal.hidden=false; document.body.style.overflow='hidden';
+  showIntro(d);
+}
+function showIntro(d){
+  cleanup(); runToken++; setStatus(''); stage.innerHTML='';
+  const g=GAMES[d-1], done=store.get()[d];
+  stage.append(h('div',{class:'intro'},
+    h('div',{class:'ic'},g.icon), h('h2',{},g.titel), h('p',{},g.info),
+    h('button',{class:'btn primary',onclick:()=>runGame(d)}, done?'Nochmal spielen':'Los geht’s!'),
+    done?h('button',{class:'btn ghost',onclick:()=>showWin(d,null,true)},'Belohnung ansehen'):null
+  ));
+}
+function runGame(d){
+  cleanup(); const my=++runToken; stage.innerHTML=''; setStatus('');
+  const alive=()=>my===runToken;
+  const api={
+    win(extra){ if(!alive())return; cleanup(); runToken++; const s=store.get(); s[d]=extra?{extra}:1; store.set(s); showWin(d,extra); },
+    lose(msg){ if(!alive())return; cleanup(); runToken++; showLose(d,msg); },
+    status:t=>{ if(alive()) setStatus(t) },
+    every(fn,ms){ const id=setInterval(fn,ms); cleanups.push(()=>clearInterval(id)); return id; },
+    after(fn,ms){ const id=setTimeout(()=>{ if(alive()) fn(); },ms); cleanups.push(()=>clearTimeout(id)); return id; },
+    sleep(ms){ return new Promise(r=>api.after(r,ms)); },
+    on(t,ev,fn,o){ t.addEventListener(ev,fn,o); cleanups.push(()=>t.removeEventListener(ev,fn,o)); },
+    raf(fn){ let last=performance.now(), live=true; const loop=t=>{ if(!live||!alive())return; const dt=Math.min(.05,(t-last)/1000); last=t; fn(dt,t); requestAnimationFrame(loop); };
+      requestAnimationFrame(loop); cleanups.push(()=>live=false); },
+    alive
+  };
+  GAMES[d-1].play(stage, api);
+}
+function showWin(d, extra, again){
+  cleanup(); runToken++; setStatus(''); stage.innerHTML='';
+  if (extra===null || extra===undefined){ const s=store.get()[d]; if(s && s.extra) extra=s.extra; }
+  const msg = d===24 ? h('div',{class:'msgcard letter'}, CONFIG.brief) : h('div',{class:'msgcard'}, CONFIG.tage[d]||'');
+  stage.append(h('div',{class:'win'},
+    h('div',{class:'big'}, d===24?'🎄':'🎉'), h('h3',{}, again?'Deine Belohnung':(d===24?'Frohe Weihnachten!':'Geschafft!')),
+    extra?h('div',{class:'extra'},extra):null, msg,
+    h('button',{class:'btn primary',onclick:closeModal},'Zurück zum Kalender'),
+    h('button',{class:'btn ghost',onclick:()=>runGame(d)},'Nochmal spielen')
+  ));
+  if(!again){ confetti(); buzz([60,40,60]); [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.25,'triangle'),i*110)); }
+}
+function showLose(d,msg){
+  setStatus(''); stage.innerHTML=''; buzz(120); tone(220,.35,'sawtooth',.12);
+  stage.append(h('div',{class:'lose'}, h('div',{class:'big'},'😅'), h('h3',{},'Knapp daneben!'), h('p',{},msg||'Versuch es nochmal.'),
+    h('button',{class:'btn primary',onclick:()=>runGame(d)},'Nochmal versuchen'),
+    h('button',{class:'btn ghost',onclick:closeModal},'Später')));
+}
+function cw(st){ const c=getComputedStyle(st); return st.clientWidth-parseFloat(c.paddingLeft)-parseFloat(c.paddingRight); }
+function canvasIn(st, hpx){
+  const W=Math.min(cw(st), 520) || 340, H=hpx || Math.round(Math.min(500, innerHeight*.6));
+  const dpr=Math.min(2, devicePixelRatio||1);
+  const cv=h('canvas',{class:'gcv'}); cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px';
+  const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr); st.append(cv);
+  return {cv,ctx,W,H};
+}
+function emoji(ctx,e,x,y,s){ ctx.font=`${s}px ${EMOJI_FONT}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(e,x,y); }
+function choiceQuiz(st, api, items, needed, emojiQ){
+  let i=0, score=0; const box=h('div',{class:'quiz'}); st.append(box);
+  const next=()=>{
+    if(i>=items.length) return score>=needed ? api.win(`${score} von ${items.length} richtig!`) : api.lose(`${score} von ${items.length} richtig – du brauchst mindestens ${needed}.`);
+    const it=items[i]; api.status(`Frage ${i+1}/${items.length} · ✅ ${score}`); box.innerHTML='';
+    box.append(h('div',{class:'q'+(emojiQ?' emoji':'')}, it.frage)); let locked=false; const btns=[];
+    it.opts.forEach(o=>{ const b=h('button',{class:'choice',onclick:()=>{
+        if(locked) return; locked=true;
+        if(o.ok){ score++; b.classList.add('ok'); tone(880,.15); } else { b.classList.add('bad'); btns.find(x=>x.ok).b.classList.add('ok'); tone(200,.2,'square',.1); }
+        api.status(`Frage ${i+1}/${items.length} · ✅ ${score}`); api.after(()=>{ i++; next(); }, 1000);
+      }}, o.t); btns.push({b,ok:o.ok}); box.append(b); });
+  };
+  next();
+}
+
+/* ---------------- Die 24 Mini-Games ---------------- */
+const GAMES=[
+/* 1 */ { titel:'Weihnachts-Memory', icon:'🃏', info:'Finde alle 6 Paare. Tippe zwei Karten an – passen sie zusammen, bleiben sie offen.',
+  play(st,api){
+    const E=['🎄','⛄','🎁','🦌','🔔','⭐']; const deck=shuffle([...E,...E]);
+    let first=null, lock=false, found=0, moves=0; const grid=h('div',{class:'cards'}); st.append(grid);
+    api.status('Züge: 0');
+    deck.forEach(e=>{ const c=h('button',{class:'mcard'}, e); c.onclick=()=>{
+      if(lock||c.classList.contains('open')) return; c.classList.add('open'); tone(600,.08);
+      if(!first){ first=c; return; }
+      moves++; api.status('Züge: '+moves);
+      if(first.textContent===c.textContent){ first.classList.add('done'); c.classList.add('done'); first=null; found++; tone(900,.15);
+        if(found===E.length) api.after(()=>api.win(`Gelöst in ${moves} Zügen!`),600); }
+      else { lock=true; const a=first; first=null; api.after(()=>{ a.classList.remove('open'); c.classList.remove('open'); lock=false; },800); }
+    }; grid.append(c); });
+  }},
+/* 2 */ { titel:'Schneeflocken fangen', icon:'❄️', info:'Tippe 15 Schneeflocken an, bevor die Zeit abläuft. Du hast 25 Sekunden!',
+  play(st,api){
+    const sky=h('div',{class:'sky'}); st.append(sky); let caught=0, left=25; const goal=15;
+    const upd=()=>api.status(`❄️ ${caught}/${goal} · ⏱️ ${left}s`); upd();
+    const spawn=()=>{ const f=h('div',{class:'flake'}, Math.random()<.15?'🌟':'❄️');
+      f.style.left=(Math.random()*(sky.clientWidth-54))+'px'; f.style.animationDuration=(2.6+Math.random()*2.4)+'s';
+      f.addEventListener('pointerdown',e=>{ e.preventDefault(); if(f.classList.contains('hit'))return; f.classList.add('hit'); caught+= f.textContent==='🌟'?2:1; tone(1000+caught*30,.08); upd();
+        if(caught>=goal) api.win(`${caught} Flocken gefangen!`); });
+      f.addEventListener('animationend',()=>f.remove()); sky.append(f); };
+    spawn(); api.every(spawn,520);
+    api.every(()=>{ left--; upd(); if(left<=0) api.lose(`Nur ${caught} von ${goal} Flocken erwischt.`); },1000);
+  }},
+/* 3 */ { titel:'Wortsalat', icon:'🔤', info:'Die Buchstaben sind durcheinander geraten! Tippe sie in der richtigen Reihenfolge an.',
+  play(st,api){
+    const word=CONFIG.wortsalat.wort.toUpperCase().replace(/\s/g,''); let letters=[...word].map((ch,i)=>({ch,i}));
+    let mixed; do{ mixed=shuffle(letters); }while(word.length>1 && mixed.map(x=>x.ch).join('')===word);
+    let answer=[];
+    st.append(h('div',{class:'hint'},'💡 '+CONFIG.wortsalat.tipp));
+    const ans=h('div',{class:'tiles answer'}), pool=h('div',{class:'tiles'}); st.append(ans,pool,
+      h('button',{class:'btn ghost',onclick:()=>{answer=[];draw();}},'Zurücksetzen'));
+    const draw=()=>{ ans.innerHTML=''; pool.innerHTML=''; ans.classList.remove('bad');
+      answer.forEach((l,k)=>ans.append(h('button',{class:'tile',onclick:()=>{answer.splice(k,1);draw();}},l.ch)));
+      for(let k=answer.length;k<word.length;k++) ans.append(h('button',{class:'tile slot'},''));
+      mixed.forEach(l=>{ if(!answer.includes(l)) pool.append(h('button',{class:'tile',onclick:()=>{answer.push(l); tone(500+answer.length*40,.06); draw(); check();}},l.ch)); });
+      api.status(`${answer.length}/${word.length} Buchstaben`); };
+    const check=()=>{ if(answer.length<word.length) return;
+      if(answer.map(l=>l.ch).join('')===word) api.after(()=>api.win('Das Wort war: '+word),400);
+      else { ans.classList.add('bad','shake'); buzz(80); api.after(()=>ans.classList.remove('shake'),500); } };
+    draw();
+  }},
+/* 4 */ { titel:'Weihnachts-Quiz', icon:'❓', info:'Beantworte die Fragen. Mindestens 2 von 3 müssen stimmen!',
+  play(st,api){
+    const items=CONFIG.quiz.map(q=>({frage:q.frage, opts:shuffle(q.antworten.map((t,k)=>({t,ok:k===q.richtig})))}));
+    choiceQuiz(st,api,items,Math.ceil(items.length*2/3));
+  }},
+/* 5 */ { titel:'Geschenke fangen', icon:'🛷', info:'Bewege den Schlitten mit dem Finger und fange 12 Geschenke. Achtung vor der Kohle! Du hast 3 Leben.',
+  play(st,api){
+    const {cv,ctx,W,H}=canvasIn(st); let x=W/2, caught=0, lives=3, items=[], sp=0, t=0; const goal=12;
+    const move=e=>{ const r=cv.getBoundingClientRect(); x=Math.max(26,Math.min(W-26,e.clientX-r.left)); };
+    api.on(cv,'pointermove',move); api.on(cv,'pointerdown',move);
+    api.raf(dt=>{
+      t+=dt; sp-=dt;
+      if(sp<=0){ sp=Math.max(.5,1.05-t*.015); items.push({x:22+Math.random()*(W-44),y:-20,v:130+Math.random()*70+t*4,bad:Math.random()<.27}); }
+      const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#152a57'); g.addColorStop(1,'#3f64b0'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#fff'; ctx.fillRect(0,H-14,W,14);
+      for(const it of items){ it.y+=it.v*dt;
+        if(!it.dead && it.y>H-62 && it.y<H-18 && Math.abs(it.x-x)<36){ it.dead=true; if(it.bad){ lives--; buzz(80); tone(160,.2,'square',.1);} else { caught++; tone(700+caught*25,.08);} }
+        if(!it.dead && it.y>H+20){ it.dead=true; if(!it.bad){ lives--; buzz(40);} }
+        if(!it.dead) emoji(ctx,it.bad?'🪨':'🎁',it.x,it.y,32); }
+      items=items.filter(i=>!i.dead);
+      emoji(ctx,'🛷',x,H-38,50);
+      api.status(`🎁 ${caught}/${goal} · ${'❤️'.repeat(Math.max(0,lives))}${'🤍'.repeat(3-Math.max(0,lives))}`);
+      if(caught>=goal) api.win('Alle Geschenke im Schlitten!'); else if(lives<=0) api.lose('Oh nein, zu viele Geschenke verloren!');
+    });
+  }},
+/* 6 */ { titel:'Rudolphs Nase', icon:'🦌', info:'Tippe so schnell wie möglich, sobald Rudolphs Nase rot leuchtet. 3 Runden – Durchschnitt unter 600 ms gewinnt!',
+  play(st,api){
+    let state='idle', round=0, times=[], t0=0;
+    const nose=h('div',{class:'nose'}), btn=h('button',{class:'react'}, h('div',{class:'deer'},'🦌'), nose), msg=h('div',{class:'rmsg'},'Tippe auf Rudolph, um zu starten');
+    st.append(btn,msg); api.status('Runde 1/3');
+    api.on(btn,'pointerdown',e=>{ e.preventDefault();
+      if(state==='idle'){ state='wait'; msg.textContent='Warte … 👀'; api.after(()=>{ state='go'; btn.classList.add('go'); t0=performance.now(); tone(880,.1); }, 1200+Math.random()*2800); }
+      else if(state==='wait'){ api.lose('Zu früh getippt! Rudolph war noch nicht so weit.'); }
+      else if(state==='go'){ const ms=Math.round(performance.now()-t0); times.push(ms); round++; btn.classList.remove('go'); state='idle';
+        if(round<3){ msg.textContent=`${ms} ms – tippe für die nächste Runde`; api.status(`Runde ${round+1}/3`); }
+        else { const avg=Math.round(times.reduce((a,b)=>a+b)/3); avg<600 ? api.win(`Durchschnitt: ${avg} ms ⚡`) : api.lose(`Durchschnitt ${avg} ms – schaffst du unter 600 ms?`); } }
+    });
+  }},
+/* 7 */ { titel:'Glocken-Melodie', icon:'🔔', info:'Merke dir die Reihenfolge der Glocken und spiele sie nach. Schaffe 6 Töne am Stück!',
+  play(st,api){
+    const cols=['#d62839','#2a9d8f','#e9a23b','#3a6ea5'], fr=[392,494,587,784]; const goal=6; let seq=[], pos=0, input=false;
+    const grid=h('div',{class:'pads'}); const pads=cols.map((c,i)=>{ const p=h('button',{class:'pad',style:`background:${c};color:${c}`},'🔔'); grid.append(p);
+      p.addEventListener('pointerdown',e=>{ e.preventDefault(); if(!input||!api.alive())return; flash(i,180);
+        if(i!==seq[pos]) return api.lose(`Falsche Glocke! Du hast ${seq.length-1} Töne geschafft.`);
+        pos++; if(pos===seq.length){ input=false; if(seq.length>=goal) api.after(()=>api.win('Perfekte Melodie! 🎶'),400); else api.after(nextRound,700); } });
+      return p; });
+    st.append(grid);
+    function flash(i,ms){ pads[i].classList.add('lit'); tone(fr[i],ms/1000+.05,'triangle'); api.after(()=>pads[i].classList.remove('lit'),ms); }
+    async function nextRound(){ seq.push(rnd(4)); pos=0; api.status(`Zuhören … (${seq.length}/${goal})`); await api.sleep(500);
+      for(const i of seq){ flash(i,380); await api.sleep(560); } input=true; api.status(`Du bist dran! (${seq.length}/${goal})`); }
+    api.after(nextRound,500);
+  }},
+/* 8 */ { titel:'Schiebepuzzle', icon:'🧩', info:'Bringe die Zahlen in die richtige Reihenfolge 1–8. Tippe ein Feld neben der Lücke an, um es zu verschieben.',
+  play(st,api){
+    let b=[1,2,3,4,5,6,7,8,0], moves=0; const adj=i=>[i-3,i+3,(i%3)?i-1:-1,(i%3<2)?i+1:-1].filter(j=>j>=0&&j<9);
+    let prev=-1; for(let k=0;k<80||b.join()==='1,2,3,4,5,6,7,8,0';k++){ const e=b.indexOf(0); const o=adj(e).filter(j=>j!==prev); const j=o[rnd(o.length)]; [b[e],b[j]]=[b[j],b[e]]; prev=e; }
+    const grid=h('div',{class:'slide'}); st.append(grid);
+    const draw=()=>{ grid.innerHTML=''; b.forEach((v,i)=>grid.append(h('button',{class:v?'':'empty',onclick:()=>{
+      const e=b.indexOf(0); if(!v||!adj(e).includes(i))return; [b[e],b[i]]=[b[i],b[e]]; moves++; tone(400+v*40,.05); draw();
+      if(b.join()==='1,2,3,4,5,6,7,8,0') api.after(()=>api.win(`Gelöst in ${moves} Zügen!`),300); }}, v?String(v):''))); api.status('Züge: '+moves); };
+    draw();
+  }},
+/* 9 */ { titel:'Wichtel-Jagd', icon:'🧝', info:'Freche Wichtel klauen Guetzli! Tippe 12 Wichtel an, bevor die Zeit abläuft. Aber nicht den Samichlaus erwischen!',
+  play(st,api){
+    let hits=0, left=22; const goal=12; const grid=h('div',{class:'holes'}); const holes=[...Array(9)].map(()=>{ const b=h('button',{class:'hole'}); grid.append(b); return b; }); st.append(grid);
+    const upd=()=>api.status(`🧝 ${hits}/${goal} · ⏱️ ${left}s`); upd();
+    holes.forEach(b=>b.addEventListener('pointerdown',e=>{ e.preventDefault(); const who=b.dataset.who; if(!who)return; b.dataset.who=''; b.innerHTML='';
+      if(who==='s'){ hits=Math.max(0,hits-2); buzz(100); toast('Autsch! Das war der Samichlaus 🎅 (−2)'); } else { hits++; tone(650+hits*30,.07); }
+      upd(); if(hits>=goal) api.win('Alle Guetzli gerettet! 🍪'); }));
+    const pop=()=>{ const free=holes.filter(b=>!b.dataset.who); if(!free.length)return; const b=free[rnd(free.length)]; const s=Math.random()<.16;
+      b.dataset.who=s?'s':'w'; b.innerHTML=''; b.append(h('span',{},s?'🎅':'🧝')); api.after(()=>{ b.dataset.who=''; b.innerHTML=''; }, 850-Math.min(300,(22-left)*12)); };
+    api.every(pop,560);
+    api.every(()=>{ left--; upd(); if(left<=0) api.lose(`${hits} von ${goal} Wichteln erwischt.`); },1000);
+  }},
+/* 10 */ { titel:'Zahl erraten', icon:'🔢', info:'Der Weihnachtsmann denkt an eine Zahl zwischen 1 und 100. Du hast 7 Versuche!',
+  play(st,api){
+    const secret=1+rnd(100); let tries=0; const max=7;
+    const inp=h('input',{type:'number',inputmode:'numeric',min:'1',max:'100',placeholder:'1–100'}), log=h('div',{class:'log'});
+    const go=()=>{ const v=parseInt(inp.value,10); if(!(v>=1&&v<=100)){ toast('Bitte eine Zahl von 1 bis 100'); return; } tries++; inp.value='';
+      if(v===secret) return api.win(`Die Zahl war ${secret} – in ${tries} Versuchen!`);
+      log.prepend(h('div',{}, h('b',{},String(v)), v<secret?'Höher ⬆️':'Tiefer ⬇️')); tone(v<secret?660:440,.1);
+      api.status(`Noch ${max-tries} Versuche`); if(tries>=max) api.lose(`Die Zahl war ${secret}.`); };
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+    st.append(h('div',{class:'row'}, inp, h('button',{class:'btn primary',onclick:go},'Raten')), log); api.status(`Noch ${max} Versuche`);
+  }},
+/* 11 */ { titel:'Tic-Tac-Schnee', icon:'⛄', info:'Du bist der Schneemann ⛄, der Computer der Tannenbaum 🎄. Drei in einer Reihe gewinnt!',
+  play(st,api){
+    const L=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; const b=Array(9).fill(''); let busy=false;
+    const winner=()=>{ for(const l of L){ if(b[l[0]]&&b[l[0]]===b[l[1]]&&b[l[1]]===b[l[2]]) return l; } return null; };
+    const grid=h('div',{class:'ttt'}); const cells=b.map((_,i)=>{ const c=h('button',{onclick:()=>play(i)}); grid.append(c); return c; }); st.append(grid);
+    const draw=()=>cells.forEach((c,i)=>c.textContent=b[i]==='X'?'⛄':b[i]==='O'?'🎄':'');
+    const find=p=>{ for(const l of L){ const v=l.map(i=>b[i]); if(v.filter(x=>x===p).length===2&&v.includes('')) return l[v.indexOf('')]; } return -1; };
+    const end=()=>{ const w=winner(); if(w){ w.forEach(i=>cells[i].classList.add('w')); api.after(()=> b[w[0]]==='X'?api.win('Der Schneemann siegt! ⛄'):api.lose('Der Tannenbaum hat gewonnen!'),700); return true; }
+      if(b.every(x=>x)){ api.after(()=>api.lose('Unentschieden – nochmal!'),500); return true; } return false; };
+    function play(i){ if(busy||b[i])return; b[i]='X'; tone(600,.08); draw(); if(end())return; busy=true; api.status('🎄 überlegt …');
+      api.after(()=>{ let m=find('O'); if(m<0 && Math.random()<.75) m=find('X'); if(m<0 && !b[4] && Math.random()<.6) m=4;
+        if(m<0){ const f=b.map((v,k)=>v?-1:k).filter(k=>k>=0); m=f[rnd(f.length)]; } b[m]='O'; tone(450,.08); draw(); busy=false; api.status('Du bist dran ⛄'); end(); },550); }
+    api.status('Du bist dran ⛄');
+  }},
+/* 12 */ { titel:'Guetzli-Klicker', icon:'🍪', info:'Tippe so schnell du kannst auf das Guetzli! 50 Mal in 10 Sekunden. Die Zeit startet beim ersten Tipp.',
+  play(st,api){
+    let n=0, left=10, started=false; const goal=50; const bar=h('i'); const c=h('button',{class:'cookie'},'🍪');
+    st.append(c, h('div',{class:'bar'},bar)); api.status(`🍪 0/${goal} · ⏱️ 10s`);
+    api.on(c,'pointerdown',e=>{ e.preventDefault(); if(!started){ started=true; api.every(()=>{ left--; api.status(`🍪 ${n}/${goal} · ⏱️ ${left}s`); if(left<=0) api.lose(`${n} von ${goal} – fast!`); },1000); }
+      n++; bar.style.width=(n/goal*100)+'%'; tone(300+n*12,.04,'square',.06); api.status(`🍪 ${n}/${goal} · ⏱️ ${left}s`); if(n>=goal) api.win(`${goal} Mal in ${10-left} Sekunden! 🔥`); });
+  }},
+/* 13 */ { titel:'Kerzen anzünden', icon:'🕯️', info:'Zünde alle Kerzen an! Aber Vorsicht: Jede Kerze schaltet auch ihre direkten Nachbarn (oben, unten, links, rechts) um.',
+  play(st,api){
+    const N=4; let on=Array(N*N).fill(true), moves=0;
+    const tog=i=>{ const r=Math.floor(i/N), c=i%N; [[r,c],[r-1,c],[r+1,c],[r,c-1],[r,c+1]].forEach(([a,b])=>{ if(a>=0&&a<N&&b>=0&&b<N) on[a*N+b]=!on[a*N+b]; }); };
+    shuffle([...Array(N*N).keys()]).slice(0,4).forEach(tog);
+    const grid=h('div',{class:'candles'}); st.append(grid);
+    const draw=()=>{ grid.innerHTML=''; on.forEach((v,i)=>grid.append(h('button',{class:v?'on':'',onclick:()=>{ tog(i); moves++; tone(500+rnd(400),.07); draw();
+      if(on.every(x=>x)) api.after(()=>api.win(`Alle Kerzen brennen! (${moves} Züge)`),400); }},'🕯️'))); api.status(`🔥 ${on.filter(x=>x).length}/${N*N} · Züge: ${moves}`); };
+    draw(); st.append(h('button',{class:'btn ghost',onclick:()=>runGame(currentDay)},'Neu mischen'));
+  }},
+/* 14 */ { titel:'Galgenmännchen', icon:'🔡', info:'Errate das Wort Buchstabe für Buchstabe. Bei 7 Fehlern schmilzt der Schneemann!',
+  play(st,api){
+    const word=CONFIG.galgen.wort.toUpperCase(); const guessed=new Set(); let miss=0; const max=7;
+    const wEl=h('div',{class:'word'}), keys=h('div',{class:'keys'});
+    st.append(h('div',{class:'hint'},'💡 '+CONFIG.galgen.tipp), wEl, keys);
+    const isL=ch=>/[A-ZÄÖÜ]/.test(ch);
+    const draw=()=>{ wEl.textContent=[...word].map(ch=>!isL(ch)||guessed.has(ch)?ch:'_').join(' '); api.status('⛄'.repeat(max-miss)+'💧'.repeat(miss)); };
+    [...'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ'].forEach(ch=>{ const k=h('button',{onclick:()=>{ k.disabled=true; guessed.add(ch);
+      if(word.includes(ch)){ k.classList.add('y'); tone(800,.08); } else { miss++; tone(220,.15,'square',.08); }
+      draw(); if([...word].every(c=>!isL(c)||guessed.has(c))) api.after(()=>api.win('Das Wort war: '+word),500); else if(miss>=max) api.lose('Das Wort war: '+word); }},ch); keys.append(k); });
+    draw();
+  }},
+/* 15 */ { titel:'Finde den Unterschied', icon:'🔍', info:'In jedem Feld versteckt sich ein Bild, das anders ist. Finde es in 6 Runden – du hast 30 Sekunden. Falsche Tipps kosten Zeit!',
+  play(st,api){
+    const P=[['🎄','🌲'],['⛄','☃️'],['🎅','🤶'],['⭐','🌟'],['🔔','🎐'],['🍪','🥮'],['❄️','💧'],['🎁','📦']]; const sizes=[3,4,4,5,5,6]; let r=0, left=30;
+    const grid=h('div',{class:'odd'}); st.append(grid); const pairs=shuffle(P);
+    const upd=()=>api.status(`Runde ${Math.min(r+1,6)}/6 · ⏱️ ${left}s`);
+    const round=()=>{ if(r>=6) return api.win(`Mit ${left} Sekunden Rest! 👀`); const n=sizes[r], [a,b]=Math.random()<.5?pairs[r]:[pairs[r][1],pairs[r][0]], odd=rnd(n*n);
+      grid.style.gridTemplateColumns=`repeat(${n},1fr)`; grid.innerHTML=''; const fs=Math.floor(260/n);
+      for(let i=0;i<n*n;i++) grid.append(h('button',{style:`font-size:${fs}px`,onclick:()=>{ if(i===odd){ r++; tone(900,.1); round(); } else { left=Math.max(0,left-3); buzz(60); upd(); } }}, i===odd?b:a));
+      upd(); };
+    round(); api.every(()=>{ left--; upd(); if(left<=0) api.lose(`Du hast ${r} von 6 Runden geschafft.`); },1000);
+  }},
+/* 16 */ { titel:'Rechen-Blitz', icon:'➗', info:'Löse 8 Rechnungen in 40 Sekunden. Falsche Antworten kosten 5 Sekunden!',
+  play(st,api){
+    let k=0, left=40; const goal=8; const box=h('div',{class:'quiz'}); st.append(box);
+    const upd=()=>api.status(`✅ ${k}/${goal} · ⏱️ ${left}s`);
+    const task=()=>{ const t=rnd(3); let a,b,res,s;
+      if(t===0){ a=5+rnd(45); b=5+rnd(45); res=a+b; s=`${a} + ${b}`; } else if(t===1){ a=20+rnd(60); b=1+rnd(a-1); res=a-b; s=`${a} − ${b}`; } else { a=2+rnd(9); b=2+rnd(9); res=a*b; s=`${a} × ${b}`; }
+      const opts=new Set([res]); while(opts.size<4){ const o=res+(rnd(2)?1:-1)*(1+rnd(10)); if(o>=0) opts.add(o); }
+      box.innerHTML=''; box.append(h('div',{class:'q',style:'font-size:40px'},s+' = ?'));
+      shuffle([...opts]).forEach(o=>box.append(h('button',{class:'choice',onclick:()=>{ if(o===res){ k++; tone(800+k*30,.08); if(k>=goal) return api.win(`Fertig mit ${left} Sekunden Rest! 🧠`); task(); } else { left=Math.max(0,left-5); buzz(80); tone(200,.15,'square',.08); } upd(); }},String(o))));
+      upd(); };
+    task(); api.every(()=>{ left--; upd(); if(left<=0) api.lose(`${k} von ${goal} gelöst.`); },1000);
+  }},
+/* 17 */ { titel:'Emoji-Rätsel', icon:'🤔', info:'Welcher Weihnachtsfilm versteckt sich hinter den Emojis?',
+  play(st,api){
+    const items=CONFIG.emojiRaetsel.map(q=>({frage:q.emoji, opts:shuffle(q.antworten.map((t,k)=>({t,ok:k===0})))}));
+    choiceQuiz(st,api,items,Math.max(1,items.length-1),true);
+  }},
+/* 18 */ { titel:'Wo ist der Stern?', icon:'🎁', info:'Merke dir, unter welchem Geschenk der Stern liegt. Die Geschenke werden gemischt – tippe danach auf das richtige. 2 Runden!',
+  play(st,api){
+    const area=h('div',{class:'cups'}); st.append(area); const slotX=s=>(s*35)+'%'; let round=0;
+    const cups=[0,1,2].map(i=>{ const c=h('button',{class:'cup'},'🎁'); c.style.left=slotX(i); c.slot=i; area.append(c); return c; });
+    async function play(){
+      round++; api.status(`Runde ${round}/2 · Gut aufpassen!`); const star=rnd(3); let canPick=false;
+      cups.forEach(c=>{ c.textContent='🎁'; c.classList.remove('up'); c.style.transition=''; });
+      await api.sleep(400); cups[star].textContent='⭐'; cups[star].classList.add('up'); tone(990,.15); await api.sleep(1300);
+      cups[star].textContent='🎁'; cups[star].classList.remove('up'); await api.sleep(400);
+      const dur=round===1?420:280; cups.forEach(c=>c.style.transition=`left ${dur}ms ease-in-out`);
+      for(let n=0;n<(round===1?7:11);n++){ const [a,b]=shuffle(cups).slice(0,2); [a.slot,b.slot]=[b.slot,a.slot]; a.style.left=slotX(a.slot); b.style.left=slotX(b.slot); tone(300+rnd(200),.04,'triangle',.08); await api.sleep(dur+60); }
+      api.status('Wo ist der Stern? 👇'); canPick=true;
+      cups.forEach((c,i)=>c.onclick=async()=>{ if(!canPick)return; canPick=false; cups.forEach(x=>x.onclick=null);
+        c.classList.add('up'); c.textContent= i===star?'⭐':'💨';
+        if(i!==star){ await api.sleep(500); cups[star].textContent='⭐'; cups[star].classList.add('up'); await api.sleep(900); return api.lose('Der Stern war woanders!'); }
+        tone(1000,.2); await api.sleep(900); if(round>=2) api.win('Adleraugen! 🦅'); else play(); });
+    }
+    play();
+  }},
+/* 19 */ { titel:'Fliegendes Rentier', icon:'🦌', info:'Tippe, um Rudolph fliegen zu lassen. Fliege an 6 Kaminen vorbei, ohne sie zu berühren!',
+  play(st,api){
+    const {cv,ctx,W,H}=canvasIn(st); let y=H/2, vy=0, started=false, pipes=[], passed=0, sp=0, t=0; const gap=Math.min(170,H*.36), goal=6, px=W*.28, pw=54;
+    const stars=[...Array(30)].map(()=>[Math.random()*W,Math.random()*H*.7,Math.random()*1.5+.5]);
+    api.on(cv,'pointerdown',e=>{ e.preventDefault(); started=true; vy=-310; tone(700,.05,'triangle',.08); });
+    api.raf(dt=>{
+      t+=dt;
+      if(started){ vy+=950*dt; y+=vy*dt; sp-=dt; if(sp<=0){ sp=1.65; pipes.push({x:W+10,top:50+Math.random()*(H-gap-100)}); }
+        for(const p of pipes){ p.x-=150*dt; if(!p.c && p.x+pw<px-14){ p.c=true; passed++; tone(900+passed*40,.1); }
+          if(px+14>p.x && px-14<p.x+pw && (y-14<p.top || y+14>p.top+gap)) return api.lose(`Autsch, Kamin! ${passed} von ${goal} geschafft.`); }
+        pipes=pipes.filter(p=>p.x>-pw); if(y>H-10||y<-30) return api.lose(`Abgestürzt! ${passed} von ${goal} geschafft.`); }
+      ctx.fillStyle='#0d1b3d'; ctx.fillRect(0,0,W,H); ctx.fillStyle='#fff'; stars.forEach(s=>{ ctx.globalAlpha=.5+Math.sin(t*2+s[0])*.3; ctx.fillRect(s[0],s[1],s[2],s[2]); }); ctx.globalAlpha=1;
+      emoji(ctx,'🌕',W-40,40,40);
+      for(const p of pipes){ [[0,p.top],[p.top+gap,H-p.top-gap]].forEach(([yy,hh])=>{ ctx.fillStyle='#a33b2b'; ctx.fillRect(p.x,yy,pw,hh); ctx.fillStyle='#7a2a1e';
+        for(let by=yy;by<yy+hh;by+=14) ctx.fillRect(p.x,by,pw,2); ctx.fillStyle='#fff'; const capY= yy===0?p.top-12:yy; ctx.fillRect(p.x-5,capY,pw+10,12); }); }
+      ctx.save(); ctx.translate(px,y); ctx.rotate(Math.max(-.5,Math.min(.8,vy/600))); ctx.scale(-1,1); emoji(ctx,'🦌',0,0,36); ctx.restore();
+      if(!started){ ctx.fillStyle='#fff'; ctx.font='bold 20px sans-serif'; ctx.textAlign='center'; ctx.fillText('Tippe zum Fliegen!',W/2,H*.75); }
+      api.status(`🏠 ${passed}/${goal}`); if(passed>=goal) api.win('Rudolph ist ein Flugprofi! ✈️');
+    });
+  }},
+/* 20 */ { titel:'Wahr oder Falsch?', icon:'⚖️', info:'Stimmt die Aussage oder nicht? Du brauchst mindestens 4 richtige Antworten.',
+  play(st,api){
+    const items=CONFIG.wahrFalsch.map(s=>({frage:s.aussage, opts:[{t:'✅ Wahr',ok:s.wahr},{t:'❌ Falsch',ok:!s.wahr}]}));
+    choiceQuiz(st,api,items,Math.max(1,items.length-1));
+  }},
+/* 21 */ { titel:'Rubbellos', icon:'🎟️', info:'Rubble mit dem Finger die silberne Fläche frei und entdecke deinen Gewinn!',
+  play(st,api){
+    const box=h('div',{class:'scratch'}, h('div',{class:'prize'}, CONFIG.rubbellos)); st.append(box); api.status('Rubbel, rubbel … ✨');
+    const cv=h('canvas'); box.append(cv); const W=box.clientWidth, H=box.clientHeight, dpr=Math.min(2,devicePixelRatio||1);
+    cv.width=W*dpr; cv.height=H*dpr; const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+    const g=ctx.createLinearGradient(0,0,W,H); g.addColorStop(0,'#c9ccd3'); g.addColorStop(.5,'#eef0f4'); g.addColorStop(1,'#a9adb6'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#7a7f8a'; ctx.font='bold 22px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('✨ Rubbel mich frei ✨',W/2,H/2);
+    for(let i=0;i<40;i++){ emoji(ctx,'❄',Math.random()*W,Math.random()*H,12); }
+    ctx.globalCompositeOperation='destination-out'; ctx.lineWidth=38; ctx.lineCap='round'; ctx.lineJoin='round';
+    let down=false, last=null, cnt=0, finished=false;
+    const pos=e=>{ const r=cv.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; };
+    const check=()=>{ const d=ctx.getImageData(0,0,cv.width,cv.height).data; let clear=0, tot=0; for(let i=3;i<d.length;i+=64){ tot++; if(d[i]===0) clear++; }
+      if(!finished && clear/tot>.55){ finished=true; cv.style.opacity=0; confetti(); api.after(()=>api.win(CONFIG.rubbellos),1800); } };
+    api.on(cv,'pointerdown',e=>{ down=true; last=pos(e); cv.setPointerCapture&&cv.setPointerCapture(e.pointerId); });
+    api.on(cv,'pointermove',e=>{ if(!down)return; const p=pos(e); ctx.beginPath(); ctx.moveTo(...last); ctx.lineTo(...p); ctx.stroke(); last=p; if(++cnt%8===0) check(); });
+    api.on(window,'pointerup',()=>{ if(down){ down=false; check(); } });
+  }},
+/* 22 */ { titel:'Guetzli-Schlange', icon:'🐍', info:'Steuere die Schlange mit Wischen oder den Pfeilen und friss 8 Guetzli. Nicht gegen die Wand oder dich selbst fahren!',
+  play(st,api){
+    const N=14, size=Math.min(cw(st),380), {cv,ctx,W}=canvasIn(st,size); const c=W/N;
+    let snake=[[6,7],[5,7],[4,7]], dir=[1,0], nd=[1,0], food, eaten=0, started=false; const goal=8;
+    const place=()=>{ do{ food=[rnd(N),rnd(N)]; }while(snake.some(s=>s[0]===food[0]&&s[1]===food[1])); }; place();
+    const setDir=d=>{ if(d[0]===-dir[0]&&d[1]===-dir[1])return; nd=d; started=true; };
+    const draw=()=>{ ctx.fillStyle='#e8f4ea'; ctx.fillRect(0,0,W,W); ctx.fillStyle='#d6ecd9'; for(let i=0;i<N;i++)for(let j=0;j<N;j++) if((i+j)%2) ctx.fillRect(i*c,j*c,c,c);
+      emoji(ctx,'🍪',food[0]*c+c/2,food[1]*c+c/2,c*.9);
+      snake.forEach((s,i)=>{ ctx.fillStyle=i===0?'#1f6f66':(i%2?'#d62839':'#fff'); ctx.beginPath(); ctx.roundRect?ctx.roundRect(s[0]*c+1,s[1]*c+1,c-2,c-2,c/3):ctx.rect(s[0]*c+1,s[1]*c+1,c-2,c-2); ctx.fill(); });
+      if(!started){ ctx.fillStyle='#22223b'; ctx.font='bold 18px sans-serif'; ctx.textAlign='center'; ctx.fillText('Wische oder tippe einen Pfeil',W/2,W*.25); }
+      api.status(`🍪 ${eaten}/${goal}`); };
+    api.every(()=>{ if(!started)return; dir=nd; const hd=[snake[0][0]+dir[0],snake[0][1]+dir[1]];
+      if(hd[0]<0||hd[1]<0||hd[0]>=N||hd[1]>=N||snake.some(s=>s[0]===hd[0]&&s[1]===hd[1])) return api.lose(`Autsch! ${eaten} von ${goal} Guetzli gefressen.`);
+      snake.unshift(hd); if(hd[0]===food[0]&&hd[1]===food[1]){ eaten++; tone(800+eaten*40,.08); if(eaten>=goal){ draw(); return api.win('Mmmh, alle Guetzli verputzt! 😋'); } place(); } else snake.pop(); draw(); },180);
+    let sx=0, sy=0; api.on(cv,'pointerdown',e=>{ sx=e.clientX; sy=e.clientY; });
+    api.on(cv,'pointerup',e=>{ const dx=e.clientX-sx, dy=e.clientY-sy; if(Math.max(Math.abs(dx),Math.abs(dy))<20)return; setDir(Math.abs(dx)>Math.abs(dy)?[Math.sign(dx),0]:[0,Math.sign(dy)]); });
+    api.on(window,'keydown',e=>{ const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key]; if(m){ e.preventDefault(); setDir(m);} });
+    const B=(t,d)=>h('button',{onpointerdown:e=>{e.preventDefault(); setDir(d);}},t);
+    st.append(h('div',{class:'pad4'}, h('span'),B('⬆️',[0,-1]),h('span'),B('⬅️',[-1,0]),B('⬇️',[0,1]),B('➡️',[1,0])));
+    draw();
+  }},
+/* 23 */ { titel:'Glücksrad', icon:'🎡', info:'Dreh am Glücksrad – hier gewinnst du immer! Was das Rad dir schenkt, gilt als Gutschein.',
+  play(st,api){
+    const segs=CONFIG.gluecksrad, n=segs.length, a=2*Math.PI/n, S=Math.min(cw(st)-10,330), {ctx,W,H}=canvasIn(st,S+20); const R=S/2-6, cx=W/2, cy=S/2+14;
+    const cols=['#d62839','#2a9d8f','#e9a23b','#3a6ea5','#8e44ad','#16a085','#d35400','#b83280'];
+    let rot=-Math.PI/2-a/2, spinning=false;
+    const draw=()=>{ ctx.clearRect(0,0,W,H);
+      for(let i=0;i<n;i++){ ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,rot+i*a,rot+(i+1)*a); ctx.closePath(); ctx.fillStyle=cols[i%cols.length]; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke();
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(rot+(i+.5)*a); ctx.fillStyle='#fff'; ctx.font='bold 13px sans-serif'; ctx.textAlign='right'; ctx.textBaseline='middle';
+        const tx=segs[i].length>16?segs[i].slice(0,15)+'…':segs[i]; ctx.fillText(tx,R-12,0); ctx.restore(); }
+      ctx.beginPath(); ctx.arc(cx,cy,22,0,7); ctx.fillStyle='#fff'; ctx.fill(); emoji(ctx,'⭐',cx,cy+1,24);
+      ctx.beginPath(); ctx.moveTo(cx-14,cy-R-12); ctx.lineTo(cx+14,cy-R-12); ctx.lineTo(cx,cy-R+16); ctx.closePath(); ctx.fillStyle='#ffd166'; ctx.strokeStyle='#22223b'; ctx.lineWidth=2; ctx.fill(); ctx.stroke(); };
+    draw(); api.status('Viel Glück! 🍀');
+    const btn=h('button',{class:'btn primary',onclick:()=>{ if(spinning)return; spinning=true; btn.disabled=true;
+      const target=rnd(n); let end=-Math.PI/2-(target+.5)*a; while(end<rot+Math.PI*2*6) end+=Math.PI*2; const start=rot, t0=performance.now(), dur=4500; let lastSeg=-1;
+      api.raf(()=>{ const p=Math.min(1,(performance.now()-t0)/dur), e=1-Math.pow(1-p,4); rot=start+(end-start)*e; draw();
+        const seg=Math.floor(((-Math.PI/2-rot)%(2*Math.PI)+4*Math.PI)%(2*Math.PI)/a); if(seg!==lastSeg){ lastSeg=seg; tone(1200,.02,'square',.05); }
+        if(p>=1 && spinning){ spinning=false; api.status('🎉 '+segs[target]); api.after(()=>api.win('Dein Gewinn: '+segs[target]),1200); } });
+    }},'Drehen!'); st.append(btn);
+  }},
+/* 24 */ { titel:'Das grosse Geschenk', icon:'🎁', info:'Heiligabend! Das letzte Geschenk ist gut verschnürt. Tippe 24 Mal darauf, um es zu öffnen.',
+  play(st,api){
+    let n=0; const goal=24, bar=h('i'), g=h('button',{class:'gift'},'🎁'); st.append(g, h('div',{class:'bar'},bar)); api.status(`0/${goal}`);
+    api.on(g,'pointerdown',e=>{ e.preventDefault(); n++; bar.style.width=(n/goal*100)+'%'; g.style.transform=`scale(${1+n*.025})`;
+      g.classList.remove('wiggle'); void g.offsetWidth; g.classList.add('wiggle'); tone(262*Math.pow(2,n/12),.12,'triangle'); buzz(15); api.status(`${n}/${goal}`);
+      if(n>=goal){ g.textContent='✨'; api.after(()=>api.win(),500); } });
+  }}
+];
+
+renderHome();
+// Um Mitternacht automatisch aktualisieren
+setInterval(()=>{ const k=new Date().toDateString(); if(k!==renderHome.k){ renderHome.k=k; if(modal.hidden) renderHome(); } }, 60000); renderHome.k=new Date().toDateString();
+</script>
+</body>
+</html>
