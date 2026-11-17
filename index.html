@@ -68,6 +68,9 @@ const CONFIG = {
   truffel: { min: 5, max: 20 },
 
   // Shop – Preise in Trüffeln. "einmalig: true" = kann nur einmal gekauft werden.
+  // Stube: Füttern kostet Trüffel, ins Bett bringen ist gratis. Vergessene Aufgabe pro Tag = Abzug.
+  stube: { futterPreis: 5, strafe: 10 },
+
   shop: {
     geschenke: [
       { id: "klein",  name: "Kleines Geschenk",  preis: 40,  einmalig: true },
@@ -324,6 +327,50 @@ a.btn{text-decoration:none;text-align:center;box-sizing:border-box;-webkit-tap-h
 .buy.owned{background:#e8f6ee;color:#1d6b3b;box-shadow:none;font-size:13px}
 .testbox{margin-top:22px;padding:10px;border:2px dashed #0002;border-radius:14px;text-align:center;font-size:13px}
 
+/* Stube */
+.stube{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center}
+.room{position:relative;width:100%;border-radius:18px;overflow:hidden;box-shadow:0 8px 24px #0004;background:#5a1f22}
+.roomsvg{display:block;width:100%;height:auto}
+.room .tw{animation:twinkle 1.6s ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.45}to{opacity:1}}
+.room .fire{transform-box:fill-box;transform-origin:50% 100%;animation:fire .35s ease-in-out infinite alternate}
+@keyframes fire{from{transform:scale(1,1) skewX(-2deg)}to{transform:scale(1.06,.9) skewX(3deg)}}
+.room .flick{transform-box:fill-box;transform-origin:50% 100%;animation:fire .5s ease-in-out infinite alternate}
+.room .glowpulse{animation:twinkle 1.2s ease-in-out infinite alternate}
+.room .snowdot{animation:snowfall 3s linear infinite}
+@keyframes snowfall{from{transform:translateY(-8px);opacity:0}20%{opacity:1}to{transform:translateY(14px);opacity:0}}
+.room .steam{animation:twinkle 1s ease-in-out infinite alternate}
+.nightshade{position:absolute;inset:0;background:radial-gradient(60% 45% at 57% 62%,#0000 0,#0a0f2a99 70%),#0a0f2a55;opacity:0;transition:opacity 1.2s;pointer-events:none}
+.room.night .nightshade{opacity:1}
+.roompets{position:absolute;inset:0}
+.rpet{position:absolute;width:21%;transform:translate(-50%,-70%);cursor:pointer;touch-action:manipulation}
+.rpet .petbody{width:100%;height:auto;aspect-ratio:4/3}
+.rpet .petbody svg{filter:drop-shadow(0 3px 2px #0007)}
+.rpet.pet-mira .petbody svg{filter:drop-shadow(0 0 1.5px #fffa) drop-shadow(0 3px 2px #0007)}
+.rpet .petbody > svg{animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{transform:scaleY(.96)}}
+.rpet.happy .petbody > svg{animation:hop .5s ease-out}
+.rpet .bed{position:absolute;left:-8%;right:-8%;bottom:16%;height:34%;border-radius:50%;background:radial-gradient(#c96b8a,#8e3b5a);box-shadow:inset 0 -4px 0 #6d2a44;opacity:0;transition:opacity .8s}
+.rpet .bowl{position:absolute;right:-22%;bottom:18%;width:34%;height:18%;border-radius:0 0 50% 50%/0 0 100% 100%;background:#3a6ea5;opacity:0;transition:opacity .6s}
+.rpet .bowl::before{content:"";position:absolute;left:8%;right:8%;top:-35%;height:55%;border-radius:50%;background:radial-gradient(#b5651d,#7a3f12)}
+.room.fedtoday .rpet .bowl{opacity:1}
+.room.feeding .rpet .bowl::before{animation:pop .4s}
+.rpet .zzz{position:absolute;right:-6%;top:-6%;font-size:18px;opacity:0;pointer-events:none}
+.room.night .rpet .bed{opacity:1}
+.room.night .rpet .zzz{opacity:1;animation:zzz 2s ease-in-out infinite}
+.room.night .rpet .petbody > svg{animation:breathe 3.2s ease-in-out infinite}
+@keyframes zzz{0%{transform:translate(0,4px) scale(.8);opacity:0}30%{opacity:1}100%{transform:translate(8px,-14px) scale(1.1);opacity:0}}
+.rpet .petname{font-size:10px}
+.todo{display:flex;gap:16px;justify-content:center;margin:12px 0 2px;font-weight:700;font-size:15px;opacity:.8}
+.todo .ok{color:#1d6b3b;opacity:1}
+.btn.care{display:flex;align-items:center;justify-content:center;gap:6px}
+.btn.feed{background:#e9a23b;color:#fff;box-shadow:0 4px 0 #a86b14}
+.btn.bed{background:#3a4e8c;color:#fff;box-shadow:0 4px 0 #24315a}
+.btn.care:disabled{background:#e8f6ee;color:#1d6b3b;box-shadow:none;cursor:default}
+.shint.center{text-align:center;margin-top:12px}
+.misslist{text-align:left;max-width:340px;margin:0 auto 12px;padding-left:20px;font-size:15px;line-height:1.5}
+.reward.minus{background:#ffe1e1;color:#9b2226;box-shadow:inset 0 0 0 2px #d6283955}
+
 /* Haustiere */
 .petlayer{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
 .pet{position:absolute;left:0;top:0;width:76px;will-change:transform;pointer-events:auto;cursor:pointer;touch-action:manipulation}
@@ -461,7 +508,7 @@ const clamp01 = x => Math.max(0, Math.min(1, x));
 const SHOP_KEY = 'advent-shop-'+CONFIG.jahr;
 const shopStore = {
   get(){ let o={}; try{ o=JSON.parse(localStorage.getItem(SHOP_KEY)||'{}') }catch(e){}
-    return { t:o.t||0, earned:o.earned||{}, inv:o.inv||{}, pets:o.pets||[] }; },
+    return { ...o, t:o.t||0, earned:o.earned||{}, inv:o.inv||{}, pets:o.pets||[], care:o.care||{} }; },
   set(o){ try{ localStorage.setItem(SHOP_KEY, JSON.stringify(o)) }catch(e){} }
 };
 // Vergibt Trüffel für einen Sieg: beim ersten Mal alles, danach nur die Verbesserung zum Rekord
@@ -585,7 +632,7 @@ function openShop(){
         toast(`Dir fehlen noch ${item.preis-st.t} Trüffel 🍫`); return; }
       if(!armed){ armed=true; b.classList.add('armed'); b.textContent='Sicher? Nochmal tippen'; setTimeout(()=>{ if(armed && b.isConnected){ armed=false; b.classList.remove('armed'); b.textContent=item.preis+' '; b.append(truffleIcon(16)); } },3000); return; }
       st.t-=item.preis;
-      if(item.pet){ if(!st.pets.includes(item.id)) st.pets.push(item.id); }
+      if(item.pet){ if(!st.pets.includes(item.id)) st.pets.push(item.id); if(!st.careChecked) st.careChecked=dayKey(); }
       else st.inv[item.id]=(st.inv[item.id]||0)+1;
       shopStore.set(st); confetti(); [659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.2,'triangle'),i*100));
       toast(item.pet?`${item.name} wohnt jetzt bei dir! 🐾`:`${item.name} gekauft! Schau ins Inventar 🎒`);
@@ -624,6 +671,154 @@ function openInventory(){
   stage.append(wrap);
 }
 
+/* ---------------- Stube: Haustiere füttern & ins Bett bringen ---------------- */
+const dayKey = (dt=new Date()) => dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+const addDays = (key, n) => { const [y,m,d]=key.split('-').map(Number); return dayKey(new Date(y, m-1, d+n)); };
+function careState(){ const s=shopStore.get(); s.care=s.care||{}; return s; }
+// Prüft alle vergangenen Tage seit dem letzten Besuch: pro vergessener Aufgabe gibt es Abzug
+function checkCare(){
+  const s=careState(); if(!s.pets.length) return null;
+  const today=dayKey(), yest=addDays(today,-1);
+  if(!s.careChecked){ s.careChecked=yest; shopStore.set(s); return null; } // ab heute zählt es
+  const missed=[]; let day=addDays(s.careChecked,1), guard=0;
+  while(day<=yest && guard++<60){ const c=s.care[day]||{};
+    if(!c.fed) missed.push({day, what:'füttern'}); if(!c.slept) missed.push({day, what:'ins Bett bringen'}); day=addDays(day,1); }
+  s.careChecked = yest>s.careChecked ? yest : s.careChecked;
+  if(!missed.length){ shopStore.set(s); return null; }
+  const want=missed.length*CONFIG.stube.strafe, take=Math.min(want, s.t);
+  s.t-=take; shopStore.set(s);
+  return { missed, take };
+}
+function showCareNotice(note){
+  openPanel('😿','Oh nein!'); setStatus('');
+  const days=[...new Set(note.missed.map(m=>m.day))];
+  const fmt=k=>{ const [y,m,d]=k.split('-'); return `${+d}.${+m}.`; };
+  const lines=days.map(dy=>{ const w=note.missed.filter(m=>m.day===dy).map(m=>m.what);
+    return h('li',{}, `${fmt(dy)}: vergessen, deine Haustiere ${w.join(' und ')}`); });
+  stage.append(h('div',{class:'win'}, h('div',{class:'big'},'😿'),
+    h('h3',{}, 'Du hast deine Haustiere vergessen!'), h('ul',{class:'misslist'}, lines),
+    h('div',{class:'reward minus'}, '−'+note.take+' ', truffleIcon(22), ' Trüffel'),
+    h('p',{class:'shint'}, `Jede vergessene Aufgabe kostet ${CONFIG.stube.strafe} Trüffel. Denk heute dran! 🐾`),
+    h('button',{class:'btn primary',onclick:openStube},'🏠 Zur Stube'),
+    h('button',{class:'btn ghost',onclick:closeModal},'Okay')));
+  buzz([80,60,80]); tone(330,.25,'triangle'); setTimeout(()=>tone(262,.35,'triangle'),220);
+}
+function roomSVG(){
+  const lights=Array.from({length:13},(_,i)=>{ const x=14+i*27, y=22+Math.sin(i*1.1)*5+ (i%2?6:0); const c=['#ff595e','#ffca3a','#8ac926','#1982c4','#ff924c'][i%5];
+    return `<circle class="tw" style="animation-delay:${(i*0.37)%2}s" cx="${x}" cy="${y}" r="4.2" fill="${c}"/>`; }).join('');
+  const orn=[[318,150,'#ff595e'],[302,180,'#ffca3a'],[334,190,'#1982c4'],[296,222,'#ff924c'],[322,228,'#ff595e'],[345,236,'#8ac926'],[312,120,'#1982c4'],[340,160,'#ffca3a']]
+    .map((o,i)=>`<circle class="tw" style="animation-delay:${i*.29}s" cx="${o[0]}" cy="${o[1]}" r="5" fill="${o[2]}"/>`).join('');
+  return `<svg viewBox="0 0 360 400" class="roomsvg" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a2e2e"/><stop offset="1" stop-color="#5a1f22"/></linearGradient>
+    <pattern id="wp" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M12 4l2 4 4 .5-3 3 .8 4-3.8-2-3.8 2 .8-4-3-3 4-.5z" fill="#ffffff10"/></pattern>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b5a3c"/><stop offset="1" stop-color="#5e3a24"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb347" stop-opacity=".55"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d1b3e"/><stop offset="1" stop-color="#2b4a8a"/></linearGradient>
+  </defs>
+  <rect width="360" height="272" fill="url(#wall)"/><rect width="360" height="272" fill="url(#wp)"/>
+  <rect y="262" width="360" height="12" fill="#3d2216"/>
+  <rect y="272" width="360" height="128" fill="url(#floor)"/>
+  ${Array.from({length:6},(_,i)=>`<path d="M0 ${292+i*20}H360" stroke="#00000022"/>`).join('')}
+  ${Array.from({length:9},(_,i)=>`<path d="M${(i*47+(i%2)*20)%360} ${272+(i%6)*20}v20" stroke="#00000022"/>`).join('')}
+  <!-- Lichterkette -->
+  <path d="M0 18 Q45 40 90 22 T180 24 T270 22 T360 20" stroke="#1d3b1d" stroke-width="2" fill="none"/>${lights}
+  <!-- Fenster -->
+  <rect x="26" y="64" width="96" height="112" rx="6" fill="#f3e2c7"/>
+  <rect x="33" y="71" width="82" height="98" fill="url(#sky)"/>
+  <circle cx="96" cy="90" r="9" fill="#fff6d5"/>
+  ${Array.from({length:14},(_,i)=>`<circle class="snowdot" style="animation-delay:${i*.3}s" cx="${36+(i*13)%78}" cy="${74+(i*17)%90}" r="1.6" fill="#fff"/>`).join('')}
+  <path d="M33 160q20-10 41-3t41-4v16H33z" fill="#fff"/>
+  <path d="M74 71v98M33 120h82" stroke="#f3e2c7" stroke-width="5"/>
+  <path d="M18 58q12 70 4 122h14q4-60-6-122z" fill="#2f7d4a"/><path d="M130 58q-12 70-4 122h-14q-4-60 6-122z" fill="#2f7d4a"/>
+  <rect x="14" y="54" width="120" height="7" rx="3" fill="#c79a3e"/>
+  <!-- Kranz -->
+  <circle cx="74" cy="40" r="0" fill="none"/>
+  <!-- Bild an der Wand -->
+  <!-- Cheminée -->
+  <rect x="140" y="150" width="130" height="122" fill="#a5523a"/>
+  ${Array.from({length:6},(_,r)=>Array.from({length:5},(_,c)=>`<rect x="${141+c*26+(r%2?13:0)}" y="${159+r*19}" width="24" height="17" rx="2" fill="#b8644a" stroke="#8e4330" stroke-width="1"/>`).join('')).join('')}
+  <rect x="134" y="140" width="142" height="14" rx="3" fill="#5b3622"/>
+  <path d="M134 140q12 10 24 0t24 0 24 0 24 0 24 0 24 0" stroke="#2f7d4a" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <circle cx="158" cy="146" r="3" fill="#ff595e"/><circle cx="206" cy="146" r="3" fill="#ffca3a"/><circle cx="254" cy="146" r="3" fill="#ff595e"/>
+  <rect x="146" y="118" width="7" height="22" fill="#fff4dc"/><path class="flick" d="M149.5 108q4 6 0 10-4-4 0-10z" fill="#ffca3a"/>
+  <rect x="258" y="122" width="7" height="18" fill="#fff4dc"/><path class="flick" style="animation-delay:.3s" d="M261.5 112q4 6 0 10-4-4 0-10z" fill="#ffca3a"/>
+  <path d="M168 272v-66a37 30 0 0 1 74 0v66z" fill="#1a0e08"/>
+  <ellipse class="glowpulse" cx="205" cy="250" rx="70" ry="45" fill="url(#glow)"/>
+  <rect x="176" y="258" width="58" height="9" rx="4" fill="#4a2a17"/><rect x="182" y="252" width="46" height="8" rx="4" fill="#5e3a24" transform="rotate(-8 205 256)"/>
+  <g class="fire"><path d="M186 258q-4-22 10-40 0 14 8 18 2-16 12-26-2 20 8 30 4-8 2-16 10 14 2 34z" fill="#ff7b00"/>
+  <path d="M194 258q-2-14 8-24 0 10 6 12 2-8 8-14 0 14 4 18-2 8-6 8z" fill="#ffca3a"/></g>
+  <!-- Strümpfe -->
+  ${[[166,'#d62839'],[205,'#2f7d4a'],[244,'#d62839']].map(([x,c])=>`<g><rect x="${x-6}" y="154" width="13" height="8" fill="#fff"/><path d="M${x-6} 162h13v22q0 6 6 8 6 3 2 9-4 4-12 0l-9-6z" fill="${c}"/></g>`).join('')}
+  <!-- Weihnachtsbaum -->
+  <rect x="312" y="252" width="14" height="22" fill="#5b3622"/>
+  <path d="M319 96l34 70h-68z" fill="#1f6b3a"/><path d="M319 128l40 78h-80z" fill="#237a42"/><path d="M319 168l44 90h-88z" fill="#2a8a4b"/>
+  <path d="M290 160q30 12 58 0M284 200q34 14 70 0M280 240q38 14 78 0" stroke="#ffd166" stroke-width="2" fill="none" opacity=".8"/>
+  ${orn}
+  <path class="tw" d="M319 80l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z" fill="#ffd166"/>
+  <rect x="282" y="256" width="26" height="20" rx="2" fill="#1982c4"/><rect x="293" y="256" width="5" height="20" fill="#ffd166"/>
+  <rect x="330" y="260" width="24" height="16" rx="2" fill="#d62839"/><rect x="340" y="260" width="4" height="16" fill="#fff"/>
+  <!-- Sessel -->
+  <rect x="10" y="212" width="96" height="70" rx="18" fill="#2e5a8a"/>
+  <rect x="4" y="236" width="24" height="54" rx="10" fill="#264d77"/><rect x="88" y="236" width="24" height="54" rx="10" fill="#264d77"/>
+  <rect x="24" y="252" width="68" height="22" rx="8" fill="#3a6ea5"/>
+  <path d="M30 222h56v26H30z" fill="#d62839" opacity=".85"/><path d="M30 222l56 26M86 222l-56 26" stroke="#fff" stroke-width="2" opacity=".5"/>
+  <rect x="14" y="288" width="6" height="10" fill="#3d2216"/><rect x="96" y="288" width="6" height="10" fill="#3d2216"/>
+  <!-- Teppich -->
+  <ellipse cx="190" cy="338" rx="150" ry="40" fill="#9b2226"/><ellipse cx="190" cy="338" rx="136" ry="33" fill="none" stroke="#ffd166" stroke-width="3" stroke-dasharray="8 6"/>
+  <!-- Kakao-Tisch -->
+  <rect x="122" y="292" width="40" height="5" rx="2" fill="#5b3622"/><rect x="138" y="296" width="8" height="16" fill="#5b3622"/>
+  <rect x="135" y="282" width="13" height="11" rx="3" fill="#fff"/><path d="M147 285q6 1 0 6" stroke="#fff" stroke-width="2" fill="none"/>
+  <path class="steam" d="M139 278q-3-5 0-9M145 278q-3-5 0-9" stroke="#ffffff99" stroke-width="1.6" fill="none"/>
+</svg>`;
+}
+// Feste Plätze der Tiere im Zimmer (in % des Zimmers)
+const ROOM_SPOTS = { mira:[16,74], fluffy:[38,79], blanchi:[60,76], yuna:[78,82] };
+function openStube(){
+  openPanel('🏠','Stube');
+  const s=careState(), today=dayKey(), c=s.care[today]||{}, owned=s.pets;
+  const conf=CONFIG.stube;
+  const room=h('div',{class:'room'+(c.slept?' night':'')});
+  room.innerHTML=roomSVG();
+  const petsBox=h('div',{class:'roompets'}); room.append(h('div',{class:'nightshade'}), petsBox);
+  const roomPets={};
+  owned.forEach(id=>{ if(!PET_SVG[id]) return; const sp=ROOM_SPOTS[id]||[50,80];
+    const info=CONFIG.shop.haustiere.find(p=>p.id===id)||{name:id};
+    const body=h('div',{class:'petbody'}); body.innerHTML=PET_SVG[id];
+    const el=h('div',{class:'rpet pet-'+id, style:`left:${sp[0]}%;top:${sp[1]}%`},
+      h('div',{class:'bed'}), body, h('div',{class:'bowl'}), h('div',{class:'zzz'},'💤'), h('div',{class:'petname'},info.name));
+    if(id==='blanchi'||id==='yuna') body.classList.add('flip');
+    el.addEventListener('pointerdown',e=>{ e.preventDefault(); petLove({el}, e.clientX, e.clientY); });
+    roomPets[id]=el; petsBox.append(el); });
+  if(c.fed) room.classList.add('fedtoday');
+  balanceStatus();
+  const todo=h('div',{class:'todo'},
+    h('span',{class:c.fed?'ok':''}, (c.fed?'✅':'⬜')+' gefüttert'),
+    h('span',{class:c.slept?'ok':''}, (c.slept?'✅':'⬜')+' im Bett'));
+  const feedBtn=h('button',{class:'btn care feed'}, c.fed?'🍖 Heute schon gefüttert ✓':['🍖 Füttern · '+conf.futterPreis+' ', truffleIcon(18)]);
+  const bedBtn=h('button',{class:'btn care bed'}, c.slept?'🌙 Schlafen schon süss 💤':'🌙 Ins Bett bringen · gratis');
+  if(!owned.length){ feedBtn.disabled=true; bedBtn.disabled=true; }
+  if(c.fed) feedBtn.disabled=true; if(c.slept) bedBtn.disabled=true;
+  feedBtn.onclick=()=>{ const st=careState(), cc=st.care[today]||{}; if(cc.fed) return;
+    if(st.t<conf.futterPreis){ feedBtn.classList.add('shake'); setTimeout(()=>feedBtn.classList.remove('shake'),450); toast(`Dir fehlen ${conf.futterPreis-st.t} Trüffel fürs Futter 😿 Spiel ein Türchen!`); return; }
+    st.t-=conf.futterPreis; cc.fed=true; st.care[today]=cc; shopStore.set(st);
+    room.classList.add('feeding','fedtoday'); Object.values(roomPets).forEach((el,i)=>setTimeout(()=>{ const r=el.getBoundingClientRect(); petLove({el}, r.left+r.width/2, r.top+10); }, 300+i*200));
+    toast('Mmmh! Alle sind satt 🍖'); setTimeout(openStube, 2200); };
+  bedBtn.onclick=()=>{ const st=careState(), cc=st.care[today]||{}; if(cc.slept) return;
+    cc.slept=true; st.care[today]=cc; shopStore.set(st);
+    room.classList.add('night'); [523,440,349].forEach((f,i)=>setTimeout(()=>tone(f,.4,'sine',.15),i*260));
+    toast('Gute Nacht! 💤'); setTimeout(openStube, 2200); };
+  const wrap=h('div',{class:'stube'}, room, todo,
+    owned.length ? null : h('p',{class:'shint'},'Hier ist es noch leer … Kauf dir im Shop ein Haustier! 🐾'),
+    feedBtn, bedBtn,
+    h('p',{class:'shint center'}, `Jeden Tag füttern und ins Bett bringen – sonst kostet jede vergessene Aufgabe ${conf.strafe} Trüffel.`));
+  if(!owned.length) wrap.append(h('button',{class:'btn ghost',onclick:openShop},'🛍️ Zum Shop'));
+  if(preview) wrap.append(h('div',{class:'testbox'}, h('b',{},'Testmodus'),
+    h('button',{class:'btn ghost',onclick:()=>{ const st=careState(); const y=addDays(dayKey(),-1); st.careChecked=addDays(y,-1); delete st.care[y]; shopStore.set(st); const n=checkCare(); if(n) showCareNotice(n); else toast('Keine Haustiere – nichts vergessen'); }},'„Gestern vergessen“ simulieren'),
+    h('button',{class:'btn ghost',onclick:()=>{ const st=careState(); delete st.care[dayKey()]; shopStore.set(st); openStube(); }},'Heute zurücksetzen')));
+  stage.append(wrap);
+}
+
 /* ---------------- Startseite ---------------- */
 const app=$('#app');
 function countdownText(){
@@ -657,7 +852,9 @@ function renderHome(){
       h('div',{class:'tl'},
         h('button',{class:'pill bal',onclick:openInventory,'aria-label':'Kontostand'}, truffleIcon(22), h('b',{}, String(shopStore.get().t))),
         h('button',{class:'pill',onclick:openInventory,'aria-label':'Inventar'}, '🎒')),
-      h('button',{class:'pill',onclick:openShop}, '🛍️ Shop')),
+      h('div',{class:'tl'},
+        h('button',{class:'pill',onclick:openStube}, '🏠 Stube'),
+        h('button',{class:'pill',onclick:openShop}, '🛍️ Shop'))),
     h('div',{class:'hero'}, h('h1',{},'Adventskalender'), h('div',{class:'for'},'für '+CONFIG.fuer),
       h('div',{class:'count'}, countdownText()), preview?h('div',{},h('span',{class:'pv'},'Vorschau – alle Türchen offen')):null),
     h('div',{class:'board'}, grid),
@@ -1127,8 +1324,12 @@ const GAMES=[
 ];
 
 renderHome();
+// Haustier-Pflege der vergangenen Tage prüfen (Abzug + Meldung)
+function careCheckAndNotify(){ if(!allowed) return; const note=checkCare(); if(note){ renderHome(); showCareNotice(note); } }
+careCheckAndNotify();
 // Um Mitternacht automatisch aktualisieren
-setInterval(()=>{ const k=new Date().toDateString(); if(k!==renderHome.k){ renderHome.k=k; if(modal.hidden) renderHome(); } }, 60000); renderHome.k=new Date().toDateString();
+setInterval(()=>{ const k=new Date().toDateString(); if(k!==renderHome.k){ renderHome.k=k; if(modal.hidden){ renderHome(); careCheckAndNotify(); } } }, 60000); renderHome.k=new Date().toDateString();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && modal.hidden) careCheckAndNotify(); });
 </script>
 </body>
 </html>
