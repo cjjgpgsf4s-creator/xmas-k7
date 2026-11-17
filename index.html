@@ -67,15 +67,16 @@ const CONFIG = {
   // Nochmal spielen lohnt sich: ein besseres Ergebnis bringt die Differenz zum bisherigen Rekord.
   truffel: { min: 5, max: 20 },
 
-  // Shop – Preise in Trüffeln. "einmalig: true" = kann nur einmal gekauft werden.
   // Stube: Füttern kostet Trüffel, ins Bett bringen ist gratis. Vergessene Aufgabe pro Tag = Abzug.
   stube: { futterPreis: 5, strafe: 10 },
 
+  // Shop – Preise in Trüffeln. Jedes Geschenk gibt es nur einmal. Gekaufte Geschenke liegen unter dem
+  // Baum in der Stube und lassen sich erst am 24. Dezember öffnen. "inhalt" bleibt bis dahin geheim.
   shop: {
     geschenke: [
-      { id: "klein",  name: "Kleines Geschenk",  preis: 40,  einmalig: true },
-      { id: "mittel", name: "Mittleres Geschenk", preis: 80,  einmalig: true },
-      { id: "gross",  name: "Grosses Geschenk",  preis: 140, einmalig: true }
+      { id: "klein",  name: "Kleines Geschenk",   preis: 40,  emoji: "🍷", inhalt: "Gutschein für einen Punsch am Weihnachtsmarkt" },
+      { id: "mittel", name: "Mittleres Geschenk", preis: 80,  emoji: "🍸", inhalt: "Gutschein für einen Drink in der Tannenbar" },
+      { id: "gross",  name: "Grosses Geschenk",   preis: 140, emoji: "🥞", inhalt: "Gutschein für ein Crêpe in der Creperie" }
     ],
     haustiere: [
       { id: "mira",    name: "Mira",    text: "kleiner schwarzer Hund",   preis: 25 },
@@ -369,6 +370,16 @@ a.btn{text-decoration:none;text-align:center;box-sizing:border-box;-webkit-tap-h
 .btn.care:disabled{background:#e8f6ee;color:#1d6b3b;box-shadow:none;cursor:default}
 .shint.center{text-align:center;margin-top:12px}
 .misslist{text-align:left;max-width:340px;margin:0 auto 12px;padding-left:20px;font-size:15px;line-height:1.5}
+.tgift{position:absolute;transform:translate(-50%,-100%);border:0;padding:0;background:none;cursor:pointer;touch-action:manipulation;filter:drop-shadow(0 3px 3px #0008)}
+.tgift svg{width:100%;height:auto;display:block}
+.tgift .gtag{position:absolute;left:50%;top:0;transform:translate(-50%,-70%);white-space:nowrap;font-size:9px;font-weight:800;color:#fff;background:#0009;border-radius:6px;padding:1px 4px}
+.tgift.ready{animation:wig 1s ease-in-out infinite}
+.tgift.ready .gtag{background:#d62839}
+.voucher{position:relative;max-width:320px;margin:4px auto 6px;padding:22px 18px 16px;border-radius:18px;background:linear-gradient(160deg,#fff8ec,#ffe9c7);border:3px dashed #d4a03c;box-shadow:0 8px 22px #0002;text-align:center}
+.voucher .vemoji{font-size:64px;line-height:1}
+.voucher .vtitle{font:700 30px Georgia,serif;color:#a0122a;margin-top:6px}
+.voucher .vtext{font-size:19px;font-weight:700;color:#5c341e;margin-top:6px;line-height:1.35}
+.voucher .vfrom{font-size:13px;opacity:.7;margin-top:10px}
 .reward.minus{background:#ffe1e1;color:#9b2226;box-shadow:inset 0 0 0 2px #d6283955}
 
 /* Haustiere */
@@ -624,7 +635,7 @@ function openShop(){
   openPanel('🛍️','Shop'); balanceStatus();
   const s=shopStore.get(), wrap=h('div',{class:'shop'});
   const buyBtn=(item, owned)=>{
-    if(owned) return h('button',{class:'buy owned',disabled:'true'}, item.pet?'Gehört dir ❤️':'Gekauft ✓');
+    if(owned) return h('button',{class:'buy owned',disabled:'true'}, item.pet?'Gehört dir ❤️':'Liegt unterm Baum 🎄');
     const b=h('button',{class:'buy'}, item.preis+' ', truffleIcon(16));
     let armed=false;
     b.onclick=()=>{ const st=shopStore.get();
@@ -633,15 +644,15 @@ function openShop(){
       if(!armed){ armed=true; b.classList.add('armed'); b.textContent='Sicher? Nochmal tippen'; setTimeout(()=>{ if(armed && b.isConnected){ armed=false; b.classList.remove('armed'); b.textContent=item.preis+' '; b.append(truffleIcon(16)); } },3000); return; }
       st.t-=item.preis;
       if(item.pet){ if(!st.pets.includes(item.id)) st.pets.push(item.id); if(!st.careChecked) st.careChecked=dayKey(); }
-      else st.inv[item.id]=(st.inv[item.id]||0)+1;
+      else { if(st.inv[item.id]>0) return; st.inv[item.id]=1; }
       shopStore.set(st); confetti(); [659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.2,'triangle'),i*100));
-      toast(item.pet?`${item.name} wohnt jetzt bei dir! 🐾`:`${item.name} gekauft! Schau ins Inventar 🎒`);
+      toast(item.pet?`${item.name} wohnt jetzt bei dir! 🐾`:`${item.name} liegt jetzt unter dem Baum in deiner Stube 🎄`);
       syncPets(); openShop(); };
     return b;
   };
-  wrap.append(h('h4',{},'🎁 Geschenke'));
+  wrap.append(h('h4',{},'🎁 Geschenke'), h('p',{class:'shint'},'Jedes Geschenk gibt es nur einmal. Es kommt unter den Weihnachtsbaum in deiner Stube und darf erst am 24. Dezember geöffnet werden. 🤫'));
   CONFIG.shop.geschenke.forEach((g,i)=>{ const ic=h('div',{class:'sic'}); ic.innerHTML=giftSVG(Math.min(i,2));
-    wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{},g.name), h('small',{},'einlösbar bei '+CONFIG.von)), buyBtn(g, g.einmalig && s.inv[g.id]>0))); });
+    wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{},g.name), h('small',{},'Überraschung · öffnen am 24.12.')), buyBtn(g, s.inv[g.id]>0))); });
   wrap.append(h('h4',{},'🐾 Haustiere'), h('p',{class:'shint'},'Gekaufte Haustiere laufen auf deinem Kalender herum.'));
   CONFIG.shop.haustiere.forEach(p=>{ const ic=h('div',{class:'sic pet-'+p.id}); ic.innerHTML=PET_SVG[p.id]||'🐾';
     wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{},p.name), h('small',{},p.text)), buyBtn({...p,pet:true}, s.pets.includes(p.id)))); });
@@ -654,8 +665,13 @@ function openInventory(){
   const gifts=CONFIG.shop.geschenke.map((g,i)=>({...g,i})).filter(g=>s.inv[g.id]>0);
   wrap.append(h('h4',{},'🎁 Deine Geschenke'));
   if(!gifts.length) wrap.append(h('p',{class:'shint'},'Noch keine Geschenke. Sammle Trüffel und kauf dir eins im Shop!'));
-  gifts.forEach(g=>{ const ic=h('div',{class:'sic'}); ic.innerHTML=giftSVG(Math.min(g.i,2));
-    wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{},g.name+(s.inv[g.id]>1?' ×'+s.inv[g.id]:'')), h('small',{},`Zeig das ${CONFIG.von}, um es einzulösen 💝`)))); });
+  gifts.forEach(g=>{ const ic=h('div',{class:'sic'}); const opened=(s.opened||{})[g.id];
+    ic.innerHTML=opened?`<span style="font-size:36px">${g.emoji||'🎁'}</span>`:giftSVG(Math.min(g.i,2));
+    const sub = opened ? `${g.inhalt} · einlösbar bei ${CONFIG.von} 💝`
+              : giftOpenable() ? 'Liegt unterm Baum – jetzt öffnen! 🎄' : '🔒 Liegt unterm Baum – öffnen am 24. Dezember';
+    const act = opened ? h('button',{class:'buy owned',onclick:()=>showVoucher(g)},'Ansehen')
+              : giftOpenable() ? h('button',{class:'buy',onclick:()=>openGift(g)},'Öffnen 🎁') : null;
+    wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{}, opened?'Gutschein':g.name), h('small',{},sub)), act)); });
   wrap.append(h('h4',{},'🐾 Deine Haustiere'));
   if(!s.pets.length) wrap.append(h('p',{class:'shint'},'Noch keine Haustiere.'));
   s.pets.forEach(id=>{ const p=CONFIG.shop.haustiere.find(x=>x.id===id); if(!p) return; const ic=h('div',{class:'sic pet-'+id}); ic.innerHTML=PET_SVG[id];
@@ -750,14 +766,15 @@ function roomSVG(){
   <path d="M194 258q-2-14 8-24 0 10 6 12 2-8 8-14 0 14 4 18-2 8-6 8z" fill="#ffca3a"/></g>
   <!-- Strümpfe -->
   ${[[166,'#d62839'],[205,'#2f7d4a'],[244,'#d62839']].map(([x,c])=>`<g><rect x="${x-6}" y="154" width="13" height="8" fill="#fff"/><path d="M${x-6} 162h13v22q0 6 6 8 6 3 2 9-4 4-12 0l-9-6z" fill="${c}"/></g>`).join('')}
-  <!-- Weihnachtsbaum -->
+  <!-- Weihnachtsbaum (vergrössert) -->
+  <ellipse cx="318" cy="282" rx="52" ry="9" fill="#d62839" opacity=".9"/><ellipse cx="318" cy="282" rx="44" ry="6" fill="#fff" opacity=".18"/>
+  <g transform="translate(319 280) scale(1.3) translate(-319 -280)">
   <rect x="312" y="252" width="14" height="22" fill="#5b3622"/>
   <path d="M319 96l34 70h-68z" fill="#1f6b3a"/><path d="M319 128l40 78h-80z" fill="#237a42"/><path d="M319 168l44 90h-88z" fill="#2a8a4b"/>
   <path d="M290 160q30 12 58 0M284 200q34 14 70 0M280 240q38 14 78 0" stroke="#ffd166" stroke-width="2" fill="none" opacity=".8"/>
   ${orn}
   <path class="tw" d="M319 80l4 9 10 1-7 7 2 10-9-5-9 5 2-10-7-7 10-1z" fill="#ffd166"/>
-  <rect x="282" y="256" width="26" height="20" rx="2" fill="#1982c4"/><rect x="293" y="256" width="5" height="20" fill="#ffd166"/>
-  <rect x="330" y="260" width="24" height="16" rx="2" fill="#d62839"/><rect x="340" y="260" width="4" height="16" fill="#fff"/>
+  </g>
   <!-- Sessel -->
   <rect x="10" y="212" width="96" height="70" rx="18" fill="#2e5a8a"/>
   <rect x="4" y="236" width="24" height="54" rx="10" fill="#264d77"/><rect x="88" y="236" width="24" height="54" rx="10" fill="#264d77"/>
@@ -772,15 +789,45 @@ function roomSVG(){
   <path class="steam" d="M139 278q-3-5 0-9M145 278q-3-5 0-9" stroke="#ffffff99" stroke-width="1.6" fill="none"/>
 </svg>`;
 }
+/* --- Geschenke unter dem Baum: öffnen ab 24. Dezember --- */
+function giftOpenable(){ return preview || new Date() >= new Date(CONFIG.jahr, 11, 24); }
+function openGift(g){
+  if(!giftOpenable()){ toast('Noch nicht! Dieses Geschenk darfst du am 24. Dezember öffnen 🎄🤫'); buzz(40); return; }
+  const s=shopStore.get(); s.opened=s.opened||{}; s.opened[g.id]=true; shopStore.set(s);
+  showVoucher(g, true);
+}
+function showVoucher(g, fresh){
+  openPanel('🎁', g.name); setStatus('');
+  stage.append(h('div',{class:'win'},
+    h('div',{class:'big'}, '🎁'), h('h3',{}, fresh?'Frohe Weihnachten!':'Dein Geschenk'),
+    h('div',{class:'voucher'},
+      h('div',{class:'vemoji'}, g.emoji||'🎁'),
+      h('div',{class:'vtitle'},'Gutschein'),
+      h('div',{class:'vtext'}, (g.inhalt||'').replace(/^Gutschein /,'')),
+      h('div',{class:'vfrom'}, `von ${CONFIG.von} · einlösbar wann immer du willst ❤️`)),
+    h('p',{class:'shint center'}, 'Tipp: Mach einen Screenshot, damit du ihn immer dabei hast.'),
+    h('button',{class:'btn primary',onclick:openStube},'🏠 Zurück zur Stube'),
+    h('button',{class:'btn ghost',onclick:openInventory},'🎒 Zum Inventar')));
+  if(fresh){ confetti(); buzz([60,40,60]); [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.25,'triangle'),i*110)); }
+}
+// Plätze unter dem Baum (x,y in % des Zimmers, Breite in %)
+const GIFT_SPOTS = { gross:[72,72,15], mittel:[84,73,12], klein:[93,74,10] };
+
 // Feste Plätze der Tiere im Zimmer (in % des Zimmers)
-const ROOM_SPOTS = { mira:[16,74], fluffy:[38,79], blanchi:[60,76], yuna:[78,82] };
+const ROOM_SPOTS = { mira:[16,74], fluffy:[36,80], blanchi:[57,76], yuna:[52,92] };
 function openStube(){
   openPanel('🏠','Stube');
   const s=careState(), today=dayKey(), c=s.care[today]||{}, owned=s.pets;
   const conf=CONFIG.stube;
   const room=h('div',{class:'room'+(c.slept?' night':'')});
   room.innerHTML=roomSVG();
-  const petsBox=h('div',{class:'roompets'}); room.append(h('div',{class:'nightshade'}), petsBox);
+  const petsBox=h('div',{class:'roompets'}), giftsBox=h('div',{class:'roompets'});
+  room.append(giftsBox, h('div',{class:'nightshade'}), petsBox);
+  CONFIG.shop.geschenke.forEach((g,i)=>{ if(!(s.inv[g.id]>0) || (s.opened||{})[g.id]) return;
+    const sp=GIFT_SPOTS[g.id]||[80,72,12], can=giftOpenable();
+    const el=h('button',{class:'tgift'+(can?' ready':''), style:`left:${sp[0]}%;top:${sp[1]}%;width:${sp[2]}%`, 'aria-label':g.name});
+    el.innerHTML=giftSVG(Math.min(i,2)); el.append(h('span',{class:'gtag'}, can?'Öffnen!':'🔒'));
+    el.onclick=()=>openGift(g); giftsBox.append(el); });
   const roomPets={};
   owned.forEach(id=>{ if(!PET_SVG[id]) return; const sp=ROOM_SPOTS[id]||[50,80];
     const info=CONFIG.shop.haustiere.find(p=>p.id===id)||{name:id};
@@ -808,7 +855,12 @@ function openStube(){
     cc.slept=true; st.care[today]=cc; shopStore.set(st);
     room.classList.add('night'); [523,440,349].forEach((f,i)=>setTimeout(()=>tone(f,.4,'sine',.15),i*260));
     toast('Gute Nacht! 💤'); setTimeout(openStube, 2200); };
-  const wrap=h('div',{class:'stube'}, room, todo,
+  const waiting=CONFIG.shop.geschenke.filter(g=>s.inv[g.id]>0 && !(s.opened||{})[g.id]).length;
+  const wrap=h('div',{class:'stube'}, room,
+    waiting ? h('p',{class:'shint center giftnote'}, giftOpenable()
+      ? `🎁 Unter dem Baum ${waiting===1?'liegt ein Geschenk':'liegen '+waiting+' Geschenke'} für dich – tipp drauf zum Öffnen!`
+      : `🎁 Unter dem Baum ${waiting===1?'liegt ein Geschenk':'liegen '+waiting+' Geschenke'} für dich – öffnen erst am 24. Dezember 🤫`) : null,
+    todo,
     owned.length ? null : h('p',{class:'shint'},'Hier ist es noch leer … Kauf dir im Shop ein Haustier! 🐾'),
     feedBtn, bedBtn,
     h('p',{class:'shint center'}, `Jeden Tag füttern und ins Bett bringen – sonst kostet jede vergessene Aufgabe ${conf.strafe} Trüffel.`));
