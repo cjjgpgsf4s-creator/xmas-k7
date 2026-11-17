@@ -63,6 +63,25 @@ const CONFIG = {
     2: { datei: "gutschein-schoggi.png", text: "Druck do druf ❤️" }
   },
 
+  // Trüffel pro gewonnenem Spiel: je schneller / weniger Züge, desto mehr (zwischen min und max).
+  // Nochmal spielen lohnt sich: ein besseres Ergebnis bringt die Differenz zum bisherigen Rekord.
+  truffel: { min: 5, max: 20 },
+
+  // Shop – Preise in Trüffeln. "einmalig: true" = kann nur einmal gekauft werden.
+  shop: {
+    geschenke: [
+      { id: "klein",  name: "Kleines Geschenk",  preis: 40,  einmalig: true },
+      { id: "mittel", name: "Mittleres Geschenk", preis: 80,  einmalig: true },
+      { id: "gross",  name: "Grosses Geschenk",  preis: 140, einmalig: true }
+    ],
+    haustiere: [
+      { id: "mira",    name: "Mira",    text: "kleiner schwarzer Hund",   preis: 25 },
+      { id: "fluffy",  name: "Fluffy",  text: "schwarz-weisse Katze",      preis: 25 },
+      { id: "blanchi", name: "Blanchi", text: "weisse Katze",              preis: 25 },
+      { id: "yuna",    name: "Yuna",    text: "kleine Schlange",           preis: 25 }
+    ]
+  },
+
   // Tag 3 – Wortsalat
   wortsalat: { wort: "ZIMTSTERN", tipp: "Ein Guetzli, das nach Weihnachten duftet" },
 
@@ -280,6 +299,50 @@ a.btn{text-decoration:none;text-align:center;box-sizing:border-box;-webkit-tap-h
 .scratch .prize{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;font-size:21px;font-weight:800;line-height:1.35;background:radial-gradient(#fff7d6,#ffe08a)}
 .scratch canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;transition:opacity .8s}
 #confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:20}
+
+/* Trüffel, Shop, Inventar */
+.truf{display:inline-flex;vertical-align:middle;line-height:0}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:-6px 0 10px}
+.topbar .tl{display:flex;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #ffffff30;background:#ffffff1c;color:#fff;border-radius:99px;padding:7px 13px;font-size:15px;font-weight:700;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);font-family:inherit}
+.pill.bal b{font-size:17px;min-width:1ch}
+.pill:active{transform:scale(.95)}
+.reward{display:inline-flex;align-items:center;gap:4px;margin:2px auto 12px;padding:8px 16px;border-radius:99px;background:#fff3d6;color:#6b3f1d;font-weight:800;font-size:18px;box-shadow:inset 0 0 0 2px #e9b94966;animation:pop .5s}
+.reward.dim{font-size:14px;font-weight:600;background:#0000000a;box-shadow:none;animation:none}
+.balline{display:inline-flex;align-items:center;gap:5px}
+.shop{width:100%;max-width:400px;padding-bottom:10px}
+.shop h4{margin:14px 2px 8px;font-size:17px}
+.shint{margin:0 2px 8px;font-size:14px;opacity:.7}
+.sitem{display:flex;align-items:center;gap:12px;background:#fff;border-radius:14px;padding:8px 10px;margin-bottom:8px;box-shadow:0 2px 8px #0000000f}
+.sic{width:64px;height:52px;display:grid;place-items:center;flex:none}
+.sic svg{max-width:64px;max-height:52px}
+.sic.pet-mira,.sic.pet-fluffy,.sic.pet-blanchi,.sic.pet-yuna{background:#1d2b55;border-radius:10px}
+.stxt{flex:1;display:flex;flex-direction:column;min-width:0}
+.stxt b{font-size:16px}.stxt small{font-size:13px;opacity:.65}
+.buy{flex:none;display:inline-flex;align-items:center;gap:4px;border:0;border-radius:12px;padding:10px 12px;font-weight:800;font-size:15px;background:var(--red);color:#fff;box-shadow:0 3px 0 #8e1422;cursor:pointer;font-family:inherit;max-width:130px;line-height:1.15}
+.buy.armed{background:#2f9e5b;box-shadow:0 3px 0 #1d6b3b;font-size:13px}
+.buy.owned{background:#e8f6ee;color:#1d6b3b;box-shadow:none;font-size:13px}
+.testbox{margin-top:22px;padding:10px;border:2px dashed #0002;border-radius:14px;text-align:center;font-size:13px}
+
+/* Haustiere */
+.petlayer{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.pet{position:absolute;left:0;top:0;width:76px;will-change:transform}
+.petbody{width:76px;height:57px;transition:transform .25s}
+.petbody.flip{transform:scaleX(-1)}
+.petbody svg{width:100%;height:100%;overflow:visible}
+.pet-mira .petbody svg{filter:drop-shadow(0 0 1.5px #fffa) drop-shadow(0 3px 3px #0008)}
+.pet .petbody svg{filter:drop-shadow(0 3px 3px #0008)}
+.pet-mira .petbody svg{filter:drop-shadow(0 0 1.5px #fffc) drop-shadow(0 3px 3px #0008)}
+.petname{text-align:center;font-size:11px;font-weight:700;color:#fff;text-shadow:0 1px 3px #000;margin-top:-3px}
+.leg{transform-box:fill-box;transform-origin:50% 0}
+.pet.walking .leg.a{animation:legs .32s ease-in-out infinite alternate}
+.pet.walking .leg.b{animation:legs .32s ease-in-out infinite alternate-reverse}
+@keyframes legs{from{transform:rotate(18deg)}to{transform:rotate(-18deg)}}
+.pet.walking .petbody > svg{animation:bob .32s ease-in-out infinite alternate}
+@keyframes bob{to{translate:0 -2px}}
+.slither{transform-box:fill-box;transform-origin:100% 50%}
+.pet.walking .slither{animation:slither .5s ease-in-out infinite alternate}
+@keyframes slither{from{transform:scaleY(1.15) skewX(-6deg)}to{transform:scaleY(.85) skewX(6deg)}}
 </style>
 </head>
 <body>
@@ -389,6 +452,160 @@ function doorSVG(d){
 }
 const ORDER=[7,15,1,22,10,4,18,13,24,3,20,9,16,6,12,21,2,11,19,8,14,23,5,17];
 
+/* ---------------- Trüffel, Shop, Inventar & Haustiere ---------------- */
+const clamp01 = x => Math.max(0, Math.min(1, x));
+const SHOP_KEY = 'advent-shop-'+CONFIG.jahr;
+const shopStore = {
+  get(){ let o={}; try{ o=JSON.parse(localStorage.getItem(SHOP_KEY)||'{}') }catch(e){}
+    return { t:o.t||0, earned:o.earned||{}, inv:o.inv||{}, pets:o.pets||[] }; },
+  set(o){ try{ localStorage.setItem(SHOP_KEY, JSON.stringify(o)) }catch(e){} }
+};
+// Vergibt Trüffel für einen Sieg: beim ersten Mal alles, danach nur die Verbesserung zum Rekord
+function awardTruffles(d, pts){
+  const s=shopStore.get(), best=s.earned[d]||0, first=!best, add=Math.max(0, pts-best);
+  if(add>0){ s.earned[d]=pts; s.t+=add; shopStore.set(s); }
+  return { add, pts, best:Math.max(best,pts), first };
+}
+function truffleIcon(px=20){
+  const sp=h('span',{class:'truf','aria-hidden':'true'});
+  sp.innerHTML=`<svg viewBox="0 0 40 40" width="${px}" height="${px}"><defs><radialGradient id="tg" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#8a5a3c"/><stop offset=".6" stop-color="#4a2a17"/><stop offset="1" stop-color="#2a170c"/></radialGradient></defs>
+    <path d="M6 22c0-9 6-16 14-16s14 7 14 16c0 7-6 12-14 12S6 29 6 22z" fill="url(#tg)"/>
+    <g fill="#c69a6d" opacity=".9"><circle cx="13" cy="17" r="1.6"/><circle cx="22" cy="12" r="1.4"/><circle cx="28" cy="20" r="1.7"/><circle cx="18" cy="25" r="1.5"/><circle cx="26" cy="28" r="1.3"/><circle cx="12" cy="27" r="1.2"/></g>
+    <ellipse cx="15" cy="13" rx="4" ry="2" fill="#fff" opacity=".25" transform="rotate(-25 15 13)"/></svg>`;
+  return sp;
+}
+function giftSVG(size){ // size: 0 klein, 1 mittel, 2 gross
+  const c=['#2f9e5b','#3a6ea5','#d62839'][size], r=['#ffd166','#ffd166','#ffd166'][size];
+  return `<svg viewBox="0 0 60 60" width="${[38,48,60][size]}" height="${[38,48,60][size]}"><rect x="8" y="24" width="44" height="30" rx="4" fill="${c}"/><rect x="5" y="17" width="50" height="11" rx="3" fill="${c}" stroke="#0002"/><rect x="26" y="17" width="8" height="37" fill="${r}"/><path d="M30 17c-6-10-16-8-13-2 2 3 8 3 13 2zm0 0c6-10 16-8 13-2-2 3-8 3-13 2z" fill="none" stroke="${r}" stroke-width="3.5" stroke-linejoin="round"/></svg>`;
+}
+
+/* --- Haustier-Zeichnungen (Blick nach rechts) --- */
+function catSVG(body, patch, ear, eye){
+  return `<svg viewBox="0 0 80 60">
+    <path d="M16 34q-13-3-9-22" stroke="${patch||body}" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <rect class="leg a" x="21" y="37" width="6" height="15" rx="3" fill="${body}"/><rect class="leg b" x="29" y="37" width="6" height="15" rx="3" fill="${body}"/>
+    <rect class="leg a" x="45" y="37" width="6" height="15" rx="3" fill="${body}"/><rect class="leg b" x="52" y="37" width="6" height="15" rx="3" fill="${body}"/>
+    <ellipse cx="37" cy="34" rx="22" ry="11" fill="${body}"/>
+    ${patch?`<ellipse cx="32" cy="29" rx="12" ry="6" fill="${patch}"/>`:''}
+    <circle cx="61" cy="23" r="11" fill="${body}"/>
+    ${patch?`<path d="M51 21a10 10 0 0 1 19-4l-7 3-4-3z" fill="${patch}"/>`:''}
+    <path d="M52 17l1-13 8 9z" fill="${patch||body}"/><path d="M63 12l7-9 2 13z" fill="${patch||body}"/>
+    <path d="M54 14l1-6 3 4z" fill="${ear}"/><path d="M66 11l3-4 1 6z" fill="${ear}"/>
+    <ellipse cx="65" cy="22" rx="2.2" ry="2.8" fill="${eye}"/><ellipse cx="65.6" cy="22" rx=".9" ry="2.2" fill="#111"/>
+    <path d="M70 26l2 1-2 1z" fill="#ff8fab"/>
+    <path d="M70 28h9M70 29.5l8 3" stroke="#888" stroke-width=".7"/>
+  </svg>`;
+}
+const PET_SVG = {
+  mira: `<svg viewBox="0 0 80 60">
+    <path d="M17 30q-10-6-9-16" stroke="#1b1b20" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <rect class="leg a" x="21" y="38" width="7" height="15" rx="3" fill="#1b1b20"/><rect class="leg b" x="30" y="38" width="7" height="15" rx="3" fill="#26262d"/>
+    <rect class="leg a" x="45" y="38" width="7" height="15" rx="3" fill="#1b1b20"/><rect class="leg b" x="53" y="38" width="7" height="15" rx="3" fill="#26262d"/>
+    <ellipse cx="39" cy="34" rx="23" ry="11.5" fill="#1b1b20"/>
+    <rect x="51" y="27" width="11" height="4.5" rx="2" fill="#d62839"/><circle cx="57" cy="33" r="2" fill="#ffd166"/>
+    <circle cx="63" cy="22" r="11.5" fill="#1b1b20"/>
+    <ellipse cx="72" cy="27" rx="7.5" ry="5" fill="#2c2c34"/><circle cx="78.5" cy="25.5" r="2.6" fill="#000"/>
+    <path d="M71 31q2 6 5 1z" fill="#ff7a9a"/>
+    <ellipse cx="56" cy="23" rx="4.5" ry="9" fill="#0d0d10" transform="rotate(18 56 23)"/>
+    <circle cx="66" cy="19" r="2.3" fill="#fff"/><circle cx="66.6" cy="19.3" r="1.3" fill="#000"/>
+  </svg>`,
+  fluffy: catSVG('#ffffff', '#1b1b20', '#ff9fb5', '#7cc576'),
+  blanchi: catSVG('#f7f7f7', null, '#ffb3c6', '#5aa9e6'),
+  yuna: `<svg viewBox="0 0 80 60">
+    <g class="slither"><path d="M4 44C14 30 22 31 28 42s16 13 22 0 12-14 16-8" stroke="#3fae5a" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M4 44C14 30 22 31 28 42s16 13 22 0 12-14 16-8" stroke="#a8e69a" stroke-width="2.4" stroke-dasharray="2 6" fill="none" stroke-linecap="round"/></g>
+    <ellipse cx="69" cy="32" rx="9" ry="7" fill="#3fae5a"/><circle cx="72" cy="29.5" r="2" fill="#fff"/><circle cx="72.5" cy="29.5" r="1.1" fill="#111"/>
+    <path d="M77 34l6 1m0 0l3-2m-3 2l3 2" stroke="#e63946" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M66 36q3 1 6 0" stroke="#2a7d3e" stroke-width="1" fill="none"/>
+  </svg>`
+};
+
+/* --- Haustiere laufen auf dem Startbildschirm herum --- */
+const petLayer = h('div',{class:'petlayer'}); document.body.append(petLayer);
+const petEls = {};
+function syncPets(){
+  const owned = allowed ? shopStore.get().pets : [];
+  for(const id of Object.keys(petEls)) if(!owned.includes(id)){ petEls[id].el.remove(); clearTimeout(petEls[id].tm); delete petEls[id]; }
+  for(const id of owned){ if(petEls[id] || !PET_SVG[id]) continue;
+    const info=CONFIG.shop.haustiere.find(p=>p.id===id)||{name:id};
+    const body=h('div',{class:'petbody'}); body.innerHTML=PET_SVG[id];
+    const el=h('div',{class:'pet pet-'+id}, body, h('div',{class:'petname'}, info.name));
+    petLayer.append(el);
+    const p={el, body, x:20+Math.random()*(innerWidth-110), y:innerHeight*(.3+Math.random()*.55), tm:0, speed: id==='yuna'?28:id==='mira'?62:48};
+    el.style.transform=`translate(${p.x}px,${p.y}px)`;
+    petEls[id]=p; p.tm=setTimeout(()=>wander(p), 300+Math.random()*1500);
+  }
+}
+function wander(p){
+  const W=innerWidth, H=innerHeight;
+  const tx=10+Math.random()*Math.max(10,W-100), ty=H*.12+Math.random()*Math.max(10,H*.8-60);
+  const dist=Math.hypot(tx-p.x, ty-p.y), dur=Math.max(.6, dist/p.speed);
+  p.body.classList.toggle('flip', tx<p.x);
+  p.el.classList.add('walking');
+  p.el.style.transition=`transform ${dur}s linear`;
+  p.el.style.transform=`translate(${tx}px,${ty}px)`;
+  p.x=tx; p.y=ty;
+  p.tm=setTimeout(()=>{ p.el.classList.remove('walking'); p.tm=setTimeout(()=>wander(p), 1200+Math.random()*3500); }, dur*1000);
+}
+
+/* --- Panels im Modal: Shop & Inventar --- */
+function openPanel(icon, title){
+  cleanup(); runToken++; currentDay=0;
+  $('#mDay').textContent=icon; $('#mName').textContent=title;
+  modal.hidden=false; document.body.style.overflow='hidden'; stage.innerHTML='';
+}
+function balanceStatus(){ const s=shopStore.get(); statusEl.innerHTML=''; statusEl.append(h('span',{class:'balline'}, 'Dein Konto: ', truffleIcon(20), ' '+s.t+' Trüffel')); }
+function openShop(){
+  openPanel('🛍️','Shop'); balanceStatus();
+  const s=shopStore.get(), wrap=h('div',{class:'shop'});
+  const buyBtn=(item, owned)=>{
+    if(owned) return h('button',{class:'buy owned',disabled:'true'}, item.pet?'Gehört dir ❤️':'Gekauft ✓');
+    const b=h('button',{class:'buy'}, item.preis+' ', truffleIcon(16));
+    let armed=false;
+    b.onclick=()=>{ const st=shopStore.get();
+      if(st.t<item.preis){ b.classList.add('shake'); setTimeout(()=>b.classList.remove('shake'),450); buzz(60);
+        toast(`Dir fehlen noch ${item.preis-st.t} Trüffel 🍫`); return; }
+      if(!armed){ armed=true; b.classList.add('armed'); b.textContent='Sicher? Nochmal tippen'; setTimeout(()=>{ if(armed && b.isConnected){ armed=false; b.classList.remove('armed'); b.textContent=item.preis+' '; b.append(truffleIcon(16)); } },3000); return; }
+      st.t-=item.preis;
+      if(item.pet){ if(!st.pets.includes(item.id)) st.pets.push(item.id); }
+      else st.inv[item.id]=(st.inv[item.id]||0)+1;
+      shopStore.set(st); confetti(); [659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.2,'triangle'),i*100));
+      toast(item.pet?`${item.name} wohnt jetzt bei dir! 🐾`:`${item.name} gekauft! Schau ins Inventar 🎒`);
+      syncPets(); openShop(); };
+    return b;
+  };
+  wrap.append(h('h4',{},'🎁 Geschenke'));
+  CONFIG.shop.geschenke.forEach((g,i)=>{ const ic=h('div',{class:'sic'}); ic.innerHTML=giftSVG(Math.min(i,2));
+    wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{},g.name), h('small',{},'einlösbar bei '+CONFIG.von)), buyBtn(g, g.einmalig && s.inv[g.id]>0))); });
+  wrap.append(h('h4',{},'🐾 Haustiere'), h('p',{class:'shint'},'Gekaufte Haustiere laufen auf deinem Kalender herum.'));
+  CONFIG.shop.haustiere.forEach(p=>{ const ic=h('div',{class:'sic pet-'+p.id}); ic.innerHTML=PET_SVG[p.id]||'🐾';
+    wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{},p.name), h('small',{},p.text)), buyBtn({...p,pet:true}, s.pets.includes(p.id)))); });
+  wrap.append(h('button',{class:'btn ghost',onclick:openInventory},'🎒 Zum Inventar'));
+  stage.append(wrap);
+}
+function openInventory(){
+  openPanel('🎒','Inventar'); balanceStatus();
+  const s=shopStore.get(), wrap=h('div',{class:'shop'});
+  const gifts=CONFIG.shop.geschenke.map((g,i)=>({...g,i})).filter(g=>s.inv[g.id]>0);
+  wrap.append(h('h4',{},'🎁 Deine Geschenke'));
+  if(!gifts.length) wrap.append(h('p',{class:'shint'},'Noch keine Geschenke. Sammle Trüffel und kauf dir eins im Shop!'));
+  gifts.forEach(g=>{ const ic=h('div',{class:'sic'}); ic.innerHTML=giftSVG(Math.min(g.i,2));
+    wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{},g.name+(s.inv[g.id]>1?' ×'+s.inv[g.id]:'')), h('small',{},`Zeig das ${CONFIG.von}, um es einzulösen 💝`)))); });
+  wrap.append(h('h4',{},'🐾 Deine Haustiere'));
+  if(!s.pets.length) wrap.append(h('p',{class:'shint'},'Noch keine Haustiere.'));
+  s.pets.forEach(id=>{ const p=CONFIG.shop.haustiere.find(x=>x.id===id); if(!p) return; const ic=h('div',{class:'sic pet-'+id}); ic.innerHTML=PET_SVG[id];
+    wrap.append(h('div',{class:'sitem'}, ic, h('div',{class:'stxt'}, h('b',{},p.name), h('small',{},p.text)))); });
+  const n=Object.keys(s.earned).length;
+  wrap.append(h('p',{class:'shint'}, `Trüffel verdient in ${n} ${n===1?'Spiel':'Spielen'}. Tipp: Nochmal spielen und schneller sein bringt mehr!`));
+  wrap.append(h('button',{class:'btn primary',onclick:openShop},'🛍️ Zum Shop'));
+  if(preview){ // nur im Testmodus für Lorenz sichtbar
+    wrap.append(h('div',{class:'testbox'}, h('b',{},'Testmodus'),
+      h('button',{class:'btn ghost',onclick:()=>{ const st=shopStore.get(); st.t+=50; shopStore.set(st); openInventory(); }},'+50 Trüffel'),
+      h('button',{class:'btn ghost',onclick:()=>{ shopStore.set({}); store.set({}); syncPets(); toast('Alles zurückgesetzt'); openInventory(); }},'Alles zurücksetzen')));
+  }
+  stage.append(wrap);
+}
+
 /* ---------------- Startseite ---------------- */
 const app=$('#app');
 function countdownText(){
@@ -418,11 +635,17 @@ function renderHome(){
   }
   const n=Object.keys(done).length;
   app.append(
+    h('div',{class:'topbar'},
+      h('div',{class:'tl'},
+        h('button',{class:'pill bal',onclick:openInventory,'aria-label':'Kontostand'}, truffleIcon(22), h('b',{}, String(shopStore.get().t))),
+        h('button',{class:'pill',onclick:openInventory,'aria-label':'Inventar'}, '🎒')),
+      h('button',{class:'pill',onclick:openShop}, '🛍️ Shop')),
     h('div',{class:'hero'}, h('h1',{},'Adventskalender'), h('div',{class:'for'},'für '+CONFIG.fuer),
       h('div',{class:'count'}, countdownText()), preview?h('div',{},h('span',{class:'pv'},'Vorschau – alle Türchen offen')):null),
     h('div',{class:'board'}, grid),
     h('div',{class:'foot'}, (n?`⭐ ${n} von 24 geschafft · `:'')+'Mit ❤️ von '+CONFIG.von)
   );
+  syncPets();
 }
 
 /* ---------------- Spiel-Rahmen ---------------- */
@@ -450,9 +673,14 @@ function showIntro(d){
 }
 function runGame(d){
   cleanup(); const my=++runToken; stage.innerHTML=''; setStatus('');
-  const alive=()=>my===runToken;
+  const alive=()=>my===runToken, t0=performance.now();
   const api={
-    win(extra){ if(!alive())return; cleanup(); runToken++; const s=store.get(); s[d]=extra?{extra}:1; store.set(s); showWin(d,extra); },
+    // q = Qualität 0..1 (optional, z.B. aus Zügen). Ohne q zählt die Zeit.
+    win(extra,q){ if(!alive())return; cleanup(); runToken++; const s=store.get(); s[d]=extra?{extra}:1; store.set(s);
+      const secs=(performance.now()-t0)/1000;
+      const qq=(typeof q==='number' && isFinite(q)) ? clamp01(q) : clamp01((90-secs)/75);
+      const {min,max}=CONFIG.truffel; const reward=awardTruffles(d, Math.round(min+(max-min)*qq));
+      showWin(d,extra,false,reward); },
     lose(msg){ if(!alive())return; cleanup(); runToken++; showLose(d,msg); },
     status:t=>{ if(alive()) setStatus(t) },
     every(fn,ms){ const id=setInterval(fn,ms); cleanups.push(()=>clearInterval(id)); return id; },
@@ -473,13 +701,21 @@ function bildButton(cfg){
   box.append(btn);
   return box;
 }
-function showWin(d, extra, again){
+function rewardLine(d, reward){
+  if(reward){
+    if(reward.add>0) return h('div',{class:'reward'}, (reward.first?'':'Neuer Rekord! ')+'+'+reward.add+' ', truffleIcon(22), ' Trüffel');
+    return h('div',{class:'reward dim'}, `${reward.pts} `, truffleIcon(18), ` – dein Rekord hier bleibt ${reward.best} Trüffel`);
+  }
+  const best=shopStore.get().earned[d];
+  return best ? h('div',{class:'reward dim'}, 'Hier verdient: '+best+' ', truffleIcon(18), ' Trüffel') : null;
+}
+function showWin(d, extra, again, reward){
   cleanup(); runToken++; setStatus(''); stage.innerHTML='';
   if (extra===null || extra===undefined){ const s=store.get()[d]; if(s && s.extra) extra=s.extra; }
   const msg = d===24 ? h('div',{class:'msgcard letter'}, CONFIG.brief) : h('div',{class:'msgcard'}, CONFIG.tage[d]||'');
   stage.append(h('div',{class:'win'},
     h('div',{class:'big'}, d===24?'🎄':'🎉'), h('h3',{}, again?'Deine Belohnung':(d===24?'Frohe Weihnachten!':'Geschafft!')),
-    extra?h('div',{class:'extra'},extra):null, (d===24||CONFIG.tage[d])?msg:null,
+    extra?h('div',{class:'extra'},extra):null, rewardLine(d, reward), (d===24||CONFIG.tage[d])?msg:null,
     (CONFIG.bilder && CONFIG.bilder[d]) ? bildButton(CONFIG.bilder[d]) : null,
     h('button',{class:'btn primary',onclick:closeModal},'Zurück zum Kalender'),
     h('button',{class:'btn ghost',onclick:()=>runGame(d)},'Nochmal spielen')
@@ -504,7 +740,7 @@ function emoji(ctx,e,x,y,s){ ctx.font=`${s}px ${EMOJI_FONT}`; ctx.textAlign='cen
 function choiceQuiz(st, api, items, needed, emojiQ){
   let i=0, score=0; const box=h('div',{class:'quiz'}); st.append(box);
   const next=()=>{
-    if(i>=items.length) return score>=needed ? api.win(`${score} von ${items.length} richtig!`) : api.lose(`${score} von ${items.length} richtig – du brauchst mindestens ${needed}.`);
+    if(i>=items.length) return score>=needed ? api.win(`${score} von ${items.length} richtig!`, score/items.length) : api.lose(`${score} von ${items.length} richtig – du brauchst mindestens ${needed}.`);
     const it=items[i]; api.status(`Frage ${i+1}/${items.length} · ✅ ${score}`); box.innerHTML='';
     box.append(h('div',{class:'q'+(emojiQ?' emoji':'')}, it.frage)); let locked=false; const btns=[];
     it.opts.forEach(o=>{ const b=h('button',{class:'choice',onclick:()=>{
@@ -528,7 +764,7 @@ const GAMES=[
       if(!first){ first=c; return; }
       moves++; api.status('Züge: '+moves);
       if(first.dataset.k===c.dataset.k){ first.classList.add('done'); c.classList.add('done'); first=null; found++; tone(900,.15);
-        if(found===E.length) api.after(()=>api.win(`Gelöst in ${moves} Zügen!`),600); }
+        if(found===E.length) api.after(()=>api.win(`Gelöst in ${moves} Zügen!`, (14-moves)/10),600); }
       else { lock=true; const a=first; first=null; api.after(()=>{ a.classList.remove('open'); c.classList.remove('open'); lock=false; },800); }
     }; grid.append(c); });
   }},
@@ -588,7 +824,7 @@ const GAMES=[
         if(k && (!k.dataset.s || rank[r]>rank[k.dataset.s])){ k.dataset.s=r; k.className='wkey '+r; } }, i*150));
       row++; cur='';
       const wait=L*150+400;
-      if(guess===word){ over=true; api.after(()=>{ tone(900,.2); api.win(`Gelöst im ${row}. Versuch! Das Wort war ${word}.`); }, wait+300); return; }
+      if(guess===word){ over=true; api.after(()=>{ tone(900,.2); api.win(`Gelöst im ${row}. Versuch! Das Wort war ${word}.`, (R+1-row)/R); }, wait+300); return; }
       if(row>=R){ over=true; api.after(()=>api.lose('Leider nicht erraten – versuch es nochmal!'), wait+300); return; }
       tone(500,.06); upd();
     };
@@ -638,7 +874,7 @@ const GAMES=[
       el.onclick=()=>{ if(done) return; const e=pos[last];
         if(!nb(e).includes(pos[t])){ el.classList.add('shake'); api.after(()=>el.classList.remove('shake'),450); return; }
         pos[last]=pos[t]; pos[t]=e; place(t); moves++; tone(520+moves*6,.05); api.status('Züge: '+moves);
-        if(pos.every((f,i)=>f===i)){ done=true; board.classList.add('solved'); api.after(()=>api.win(`Gelöst in ${moves} Zügen! 🏔️`),900); } };
+        if(pos.every((f,i)=>f===i)){ done=true; board.classList.add('solved'); api.after(()=>api.win(`Gelöst in ${moves} Zügen! 🏔️`, (40-moves)/28),900); } };
       tiles[t]=el; board.append(el); place(t);
     }
     st.append(board, h('div',{class:'pzhelp'}, h('span',{},'So soll es aussehen:'), h('img',{src:img,alt:''})));
