@@ -17,7 +17,7 @@
    Texte einfach zwischen den Anführungszeichen "..." ersetzen.
    ===================================================================== */
 const CONFIG = {
-  fuer: "dich",            // Name der beschenkten Person, z.B. "Anna"
+  fuer: "Sophie",           // Name der beschenkten Person, z.B. "Anna"
   von:  "Lorenz",          // dein Name
   jahr: 2026,              // Jahr des Kalenders
 
@@ -32,29 +32,29 @@ const CONFIG = {
 
   // Nachricht, die nach jedem gewonnenen Spiel erscheint (Liebesbotschaft, Gutschein, Hinweis auf ein Versteck ...)
   tage: {
-    1:  "Der Countdown läuft! 24 kleine Überraschungen warten auf dich. Schön, dass es dich gibt. ❤️",
+    1:  "",
     2:  "",
-    3:  "Weisst du noch, als wir … (hier eure gemeinsame Erinnerung einfügen) 😊",
-    4:  "Du hast heute einen Wunsch frei. Einfach aussprechen! ✨",
-    5:  "Schau mal in deine Jackentasche … 👀",
-    6:  "Heute ist Samichlaus! 🎅 Hoffentlich warst du dieses Jahr brav …",
-    7:  "Gutschein: Ein Abend auf dem Weihnachtsmarkt – Glühwein geht auf mich. 🍷",
-    8:  "Drei Dinge, die ich an dir mag: 1) … 2) … 3) …",
-    9:  "Gutschein: Ein Filmabend deiner Wahl mit Popcorn. 🍿",
-    10: "Fast schon die Hälfte geschafft! Du bist super. 💪",
-    11: "Gutschein: Frühstück ans Bett. 🥐",
-    12: "Eine kleine Überraschung wartet im Kühlschrank. 🧊",
-    13: "Gutschein: Eine Massage – 20 Minuten, ohne Diskussion. 💆",
-    14: "Heute bin ich dein persönlicher Chauffeur. 🚗",
-    15: "Ich freue mich riesig auf Weihnachten mit dir. 🎄",
-    16: "Gutschein: Gemeinsam Guetzli backen. 🍪",
-    17: "Ein Lied, das mich an dich erinnert: … 🎶",
-    18: "Gutschein: Ein Tag, an dem ich den Abwasch übernehme. 🧽",
-    19: "Nur noch 5 Türchen! Schon aufgeregt? 😄",
-    20: "Gutschein: Ein Spaziergang im Schnee mit anschliessendem Fondue. 🧀",
-    21: "Kürzester Tag des Jahres – aber der schönste mit dir. ☀️",
-    22: "Gutschein: Einmal Lieblingsessen, von mir gekocht. 🍝",
-    23: "Morgen ist es so weit! Nur noch einmal schlafen. 😴",
+    3:  "",
+    4:  "",
+    5:  "",
+    6:  "",
+    7:  "",
+    8:  "",
+    9:  "",
+    10: "",
+    11: "",
+    12: "",
+    13: "",
+    14: "",
+    15: "",
+    16: "",
+    17: "",
+    18: "",
+    19: "",
+    20: "",
+    21: "",
+    22: "",
+    23: "",
     24: "" // Tag 24 zeigt den Weihnachtsbrief unten
   },
 
@@ -72,6 +72,13 @@ const CONFIG = {
     { frage: "In welchem Land wohnt der Weihnachtsmann (laut Finnen)?", antworten: ["Finnland", "Kanada", "Island", "Norwegen"], richtig: 0 },
     { frage: "In welcher Stadt wurde der Adventskranz erfunden?", antworten: ["Hamburg", "Wien", "Zürich", "Rom"], richtig: 0 }
   ],
+
+  // Tag 4 – Wordle (beliebig langes Wort, nur Buchstaben A–Z; tipp leer lassen = kein Hinweis)
+  wordle: { wort: "MARTIN", tipp: "" },
+
+  // Tag 6 – Schiebe-Puzzle (Bild liegt neben index.html; mehr Züge = schwieriger)
+  puzzleBild: "puzzle6.webp",
+  puzzleZuege: 22,
 
   // Tag 14 – Galgenmännchen
   galgen: { wort: "LEBKUCHENHERZ", tipp: "Hängt am Weihnachtsmarkt an jeder Bude" },
@@ -217,6 +224,12 @@ a.btn{text-decoration:none;text-align:center;box-sizing:border-box;-webkit-tap-h
 .slide{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:min(84vw,320px);margin-top:12px;background:#3b2418;padding:7px;border-radius:16px}
 .slide button{aspect-ratio:1;border:0;border-radius:12px;font-size:32px;font-weight:800;color:#fff;background:linear-gradient(135deg,#2a9d8f,#1f6f66);box-shadow:0 3px 0 #0004;cursor:pointer}
 .slide button.empty{background:transparent;box-shadow:none}
+.pz{position:relative;width:min(78vw,300px);aspect-ratio:3/4;margin-top:8px;background:#3b2418;border-radius:14px;padding:0;overflow:hidden;box-shadow:0 6px 18px #0003}
+.pzt{position:absolute;width:33.3333%;height:33.3333%;border:0;padding:0;background-size:300% 300%;box-shadow:inset 0 0 0 1.5px #fff8;cursor:pointer;transition:left .15s ease,top .15s ease,box-shadow .6s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.pz.solved{background:url("puzzle6.webp") center/cover}
+.pz.solved .pzt{box-shadow:none}
+.pzhelp{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:14px;opacity:.85}
+.pzhelp img{width:54px;aspect-ratio:3/4;object-fit:cover;border-radius:8px;box-shadow:0 2px 6px #0003}
 .holes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:min(88vw,340px);margin-top:12px}
 .hole{aspect-ratio:1;border:0;border-radius:50%;background:radial-gradient(#3d2a1c 55%,#6b4a32 57%);font-size:48px;cursor:pointer;display:grid;place-items:center}
 .hole span{animation:popup .15s}
@@ -241,6 +254,18 @@ a.btn{text-decoration:none;text-align:center;box-sizing:border-box;-webkit-tap-h
 .keys button{width:34px;height:44px;border:0;border-radius:8px;background:#fff;font-size:17px;font-weight:700;color:var(--ink);box-shadow:0 2px 0 #0002;cursor:pointer}
 .keys button:disabled{opacity:.25}
 .keys button.y{background:#2a9d8f;color:#fff;opacity:1}
+.wgrid{display:grid;gap:6px;width:100%;max-width:330px;margin:4px auto 0}
+.wcell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:2px solid #0002;border-radius:8px;background:#fff;font-size:24px;font-weight:800;color:var(--ink);text-transform:uppercase;user-select:none}
+.wcell.filled{border-color:#0005;animation:pop .15s}
+.wcell.g,.wkey.g{background:#2f9e5b;border-color:#2f9e5b;color:#fff}
+.wcell.y,.wkey.y{background:#e9b949;border-color:#e9b949;color:#fff}
+.wcell.x,.wkey.x{background:#8a8f98;border-color:#8a8f98;color:#fff}
+.wcell.flip{animation:wflip .4s}
+@keyframes wflip{0%{transform:rotateX(90deg)}100%{transform:rotateX(0)}}
+.wkb{width:100%;max-width:400px;margin:12px auto 0;display:flex;flex-direction:column;gap:6px}
+.wkrow{display:flex;gap:4px;justify-content:center}
+.wkey{flex:1;min-width:0;max-width:38px;height:48px;padding:0;border:0;border-radius:7px;background:#fff;font-size:16px;font-weight:700;color:var(--ink);box-shadow:0 2px 0 #0002;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.wkey.wide{max-width:58px;flex:1.5;font-size:19px}
 .odd{display:grid;gap:6px;width:min(88vw,340px);margin-top:12px}
 .odd button{aspect-ratio:1;border:0;background:#fff;border-radius:10px;cursor:pointer;padding:0;box-shadow:0 2px 0 #0002}
 .cups{position:relative;width:min(90vw,340px);height:170px;margin-top:30px}
@@ -537,10 +562,42 @@ const GAMES=[
       else { ans.classList.add('bad','shake'); buzz(80); api.after(()=>ans.classList.remove('shake'),500); } };
     draw();
   }},
-/* 4 */ { titel:'Weihnachts-Quiz', icon:'❓', info:'Beantworte die Fragen. Mindestens 2 von 3 müssen stimmen!',
+/* 4 */ { titel:'Wordle', icon:'🟩', info:`Errate das Wort mit ${CONFIG.wordle.wort.length} Buchstaben. Du hast 6 Versuche.\n🟩 richtiger Platz · 🟨 kommt vor, aber woanders · ⬜ kommt nicht vor`,
   play(st,api){
-    const items=CONFIG.quiz.map(q=>({frage:q.frage, opts:shuffle(q.antworten.map((t,k)=>({t,ok:k===q.richtig})))}));
-    choiceQuiz(st,api,items,Math.ceil(items.length*2/3));
+    const word=CONFIG.wordle.wort.toUpperCase(), L=word.length, R=6;
+    let row=0, cur='', over=false;
+    const grid=h('div',{class:'wgrid',style:`grid-template-columns:repeat(${L},1fr)`}), cells=[];
+    for(let i=0;i<R*L;i++){ const c=h('div',{class:'wcell'}); cells.push(c); grid.append(c); }
+    if(CONFIG.wordle.tipp) st.append(h('div',{class:'hint'},'💡 '+CONFIG.wordle.tipp));
+    const kb=h('div',{class:'wkb'}), keyEls={}, rank={g:3,y:2,x:1};
+    st.append(grid, kb);
+    ['QWERTZUIOP','ASDFGHJKL','⏎YXCVBNM⌫'].forEach(r=>{ const rEl=h('div',{class:'wkrow'});
+      [...r].forEach(ch=>{ const k=h('button',{class:'wkey'+(ch==='⏎'||ch==='⌫'?' wide':''), onclick:()=>press(ch)}, ch);
+        if(/[A-Z]/.test(ch)) keyEls[ch]=k; rEl.append(k); });
+      kb.append(rEl); });
+    const upd=()=>{ if(row<R) for(let i=0;i<L;i++){ const c=cells[row*L+i]; c.textContent=cur[i]||''; c.classList.toggle('filled',!!cur[i]); }
+      api.status(`Versuch ${Math.min(row+1,R)} von ${R}`); };
+    const shakeRow=()=>{ buzz(60); for(let i=0;i<L;i++){ const c=cells[row*L+i]; c.classList.add('shake'); api.after(()=>c.classList.remove('shake'),500); } };
+    const submit=()=>{
+      if(cur.length<L) return shakeRow();
+      const res=Array(L).fill('x'), rest={};
+      for(let i=0;i<L;i++){ if(cur[i]===word[i]) res[i]='g'; else rest[word[i]]=(rest[word[i]]||0)+1; }
+      for(let i=0;i<L;i++){ if(res[i]!=='g' && rest[cur[i]]>0){ res[i]='y'; rest[cur[i]]--; } }
+      const guess=cur, r0=row;
+      res.forEach((r,i)=>api.after(()=>{ cells[r0*L+i].classList.add(r,'flip'); const k=keyEls[guess[i]];
+        if(k && (!k.dataset.s || rank[r]>rank[k.dataset.s])){ k.dataset.s=r; k.className='wkey '+r; } }, i*150));
+      row++; cur='';
+      const wait=L*150+400;
+      if(guess===word){ over=true; api.after(()=>{ tone(900,.2); api.win(`Gelöst im ${row}. Versuch! Das Wort war ${word}.`); }, wait+300); return; }
+      if(row>=R){ over=true; api.after(()=>api.lose('Leider nicht erraten – versuch es nochmal!'), wait+300); return; }
+      tone(500,.06); upd();
+    };
+    const press=ch=>{ if(over) return;
+      if(ch==='⌫'){ cur=cur.slice(0,-1); upd(); }
+      else if(ch==='⏎') submit();
+      else if(cur.length<L){ cur+=ch; tone(600,.04); upd(); } };
+    api.on(window,'keydown',e=>{ if(e.key==='Enter') press('⏎'); else if(e.key==='Backspace') press('⌫'); else if(/^[a-zA-Z]$/.test(e.key)) press(e.key.toUpperCase()); });
+    upd();
   }},
 /* 5 */ { titel:'Geschenke fangen', icon:'🛷', info:'Bewege den Schlitten mit dem Finger und fange 12 Geschenke. Achtung vor der Kohle! Du hast 3 Leben.',
   play(st,api){
@@ -562,18 +619,30 @@ const GAMES=[
       if(caught>=goal) api.win('Alle Geschenke im Schlitten!'); else if(lives<=0) api.lose('Oh nein, zu viele Geschenke verloren!');
     });
   }},
-/* 6 */ { titel:'Rudolphs Nase', icon:'🦌', info:'Tippe so schnell wie möglich, sobald Rudolphs Nase rot leuchtet. 3 Runden – Durchschnitt unter 600 ms gewinnt!',
+/* 6 */ { titel:'Bilder-Puzzle', icon:'🏔️', info:'Das Bild ist durcheinander geraten! Tippe ein Teil neben dem leeren Feld an, um es zu verschieben, bis das Bild wieder stimmt.',
   play(st,api){
-    let state='idle', round=0, times=[], t0=0;
-    const nose=h('div',{class:'nose'}), btn=h('button',{class:'react'}, h('div',{class:'deer'},'🦌'), nose), msg=h('div',{class:'rmsg'},'Tippe auf Rudolph, um zu starten');
-    st.append(btn,msg); api.status('Runde 1/3');
-    api.on(btn,'pointerdown',e=>{ e.preventDefault();
-      if(state==='idle'){ state='wait'; msg.textContent='Warte … 👀'; api.after(()=>{ state='go'; btn.classList.add('go'); t0=performance.now(); tone(880,.1); }, 1200+Math.random()*2800); }
-      else if(state==='wait'){ api.lose('Zu früh getippt! Rudolph war noch nicht so weit.'); }
-      else if(state==='go'){ const ms=Math.round(performance.now()-t0); times.push(ms); round++; btn.classList.remove('go'); state='idle';
-        if(round<3){ msg.textContent=`${ms} ms – tippe für die nächste Runde`; api.status(`Runde ${round+1}/3`); }
-        else { const avg=Math.round(times.reduce((a,b)=>a+b)/3); avg<600 ? api.win(`Durchschnitt: ${avg} ms ⚡`) : api.lose(`Durchschnitt ${avg} ms – schaffst du unter 600 ms?`); } }
-    });
+    const N=3, img=CONFIG.puzzleBild, last=N*N-1;
+    // pos[tile] = Feld, auf dem das Teil gerade liegt; Teil "last" ist das leere Feld
+    let pos=[...Array(N*N).keys()], moves=0, done=false;
+    const nb=f=>{ const r=Math.floor(f/N), c=f%N, o=[]; if(r>0)o.push(f-N); if(r<N-1)o.push(f+N); if(c>0)o.push(f-1); if(c<N-1)o.push(f+1); return o; };
+    // Mischen mit wenigen zufälligen, gültigen Zügen -> immer lösbar und nicht zu schwer
+    let prev=-1;
+    do{ pos=[...Array(N*N).keys()]; prev=-1;
+      for(let i=0;i<CONFIG.puzzleZuege;i++){ const e=pos[last], opts=nb(e).filter(f=>f!==prev), f=opts[rnd(opts.length)], t=pos.indexOf(f);
+        pos[t]=e; pos[last]=f; prev=e; }
+    } while(pos.every((f,t)=>f===t));
+    const board=h('div',{class:'pz'}), tiles=[];
+    const place=t=>{ const f=pos[t]; tiles[t].style.left=(f%N)*100/N+'%'; tiles[t].style.top=Math.floor(f/N)*100/N+'%'; };
+    for(let t=0;t<last;t++){
+      const el=h('button',{class:'pzt', style:`background-image:url("${img}");background-position:${(t%N)*50}% ${Math.floor(t/N)*50}%`});
+      el.onclick=()=>{ if(done) return; const e=pos[last];
+        if(!nb(e).includes(pos[t])){ el.classList.add('shake'); api.after(()=>el.classList.remove('shake'),450); return; }
+        pos[last]=pos[t]; pos[t]=e; place(t); moves++; tone(520+moves*6,.05); api.status('Züge: '+moves);
+        if(pos.every((f,i)=>f===i)){ done=true; board.classList.add('solved'); api.after(()=>api.win(`Gelöst in ${moves} Zügen! 🏔️`),900); } };
+      tiles[t]=el; board.append(el); place(t);
+    }
+    st.append(board, h('div',{class:'pzhelp'}, h('span',{},'So soll es aussehen:'), h('img',{src:img,alt:''})));
+    api.status('Züge: 0');
   }},
 /* 7 */ { titel:'Glocken-Melodie', icon:'🔔', info:'Merke dir die Reihenfolge der Glocken und spiele sie nach. Schaffe 6 Töne am Stück!',
   play(st,api){
