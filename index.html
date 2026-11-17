@@ -1717,11 +1717,11 @@ const GAMES=[
       if(hd[0]===food[0]&&hd[1]===food[1]){ eaten++; tone(800+eaten*40,.08,'triangle'); buzz(15); prev.push(prev[prev.length-1]); api.status(`🍪 ${eaten}/${goal}`);
         if(eaten>=goal){ dead=true; return api.after(()=>api.win('Mmmh, alle Guetzli verputzt! 😋'),300); } place(); }
       else snake.pop(); }
-    function cookie(x,y,r){ ctx.fillStyle='#c98a4b'; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); ctx.strokeStyle='#9a5f2a'; ctx.lineWidth=2; ctx.stroke();
+    function cookie(x,y,r){ ctx.fillStyle='#c98a4b'; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#7a4a1f'; ctx.lineWidth=2.5; ctx.stroke();
       ctx.fillStyle='#4a2a17'; [[-.35,-.3],[.3,-.2],[0,.25],[-.3,.35],[.35,.35]].forEach(([a,bb])=>{ ctx.beginPath(); ctx.arc(x+a*r,y+bb*r,r*.13,0,7); ctx.fill(); }); }
     function render(f){
       ctx.drawImage(bg,0,0,W,W);
-      if(pop>0) pop=Math.max(0,pop-.06); cookie(food[0]*c+c/2, food[1]*c+c/2, c*.36*(1+pop*.4));
+      if(pop>0) pop=Math.max(0,pop-.06);
       const pts=snake.map((p,i)=>{ const q=prev[i]||p; return [(q[0]+(p[0]-q[0])*f)*c+c/2, (q[1]+(p[1]-q[1])*f)*c+c/2]; });
       ctx.lineCap='round'; ctx.lineJoin='round';
       const path=()=>{ ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); pts.forEach(p=>ctx.lineTo(p[0],p[1])); };
@@ -1736,7 +1736,10 @@ const GAMES=[
       if(Math.floor(performance.now()/300)%3===0){ ctx.strokeStyle='#e63946'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(c*.4,0); ctx.lineTo(c*.68,0); ctx.lineTo(c*.78,-c*.08); ctx.moveTo(c*.68,0); ctx.lineTo(c*.78,c*.08); ctx.stroke(); }
       [-1,1].forEach(s=>{ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(c*.14,s*c*.18,c*.13,0,7); ctx.fill(); ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(c*.18,s*c*.18,c*.07,0,7); ctx.fill(); });
       ctx.restore();
-      if(!started){ ctx.fillStyle='rgba(255,255,255,.85)'; ctx.fillRect(W*.1,W*.16,W*.8,40); ctx.fillStyle='#22223b'; ctx.font='bold 16px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('Wische oder tippe einen Pfeil 👆',W/2,W*.16+20); }
+      // Guetzli immer zuoberst, mit pulsierendem Leuchtring – damit man es sicher sieht
+      const fx=food[0]*c+c/2, fy=food[1]*c+c/2, pulse=.5+.5*Math.sin(performance.now()/180);
+      ctx.fillStyle=`rgba(255,209,102,${.35+.3*pulse})`; ctx.beginPath(); ctx.arc(fx,fy,c*(.55+.08*pulse),0,7); ctx.fill();
+      cookie(fx, fy, c*.42*(1+pop*.4));
     }
     api.raf(dt=>{ if(started && !dead){ acc+=dt; while(acc>=STEP && !dead){ acc-=STEP; step(); } } render(dead?1:Math.min(1,acc/STEP)); });
     // Wischen: reagiert schon während der Bewegung, nicht erst beim Loslassen
@@ -1747,6 +1750,7 @@ const GAMES=[
     api.on(window,'pointerup',()=>{ sx=null; });
     api.on(window,'keydown',e=>{ const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]}[e.key]; if(m){ e.preventDefault(); setDir(m);} });
     const B=(t,d)=>h('button',{onpointerdown:e=>{e.preventDefault(); setDir(d);}},t);
+    st.append(h('div',{class:'hint'},'Friss die leuchtenden Guetzli 🍪 – wische oder tippe einen Pfeil, um loszulegen!'));
     st.append(h('div',{class:'pad4 big'}, h('span'),B('⬆️',[0,-1]),h('span'),B('⬅️',[-1,0]),B('⬇️',[0,1]),B('➡️',[1,0])));
     api.status(`🍪 0/${goal}`);
   }},
