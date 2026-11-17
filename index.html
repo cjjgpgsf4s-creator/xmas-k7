@@ -326,7 +326,11 @@ a.btn{text-decoration:none;text-align:center;box-sizing:border-box;-webkit-tap-h
 
 /* Haustiere */
 .petlayer{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
-.pet{position:absolute;left:0;top:0;width:76px;will-change:transform}
+.pet{position:absolute;left:0;top:0;width:76px;will-change:transform;pointer-events:auto;cursor:pointer;touch-action:manipulation}
+.pet.happy .petbody > svg{animation:hop .5s ease-out}
+@keyframes hop{30%{translate:0 -16px}60%{translate:0 0}75%{translate:0 -5px}}
+.heart{position:fixed;z-index:4;pointer-events:none;animation:heartUp 1.3s ease-out forwards;opacity:0}
+@keyframes heartUp{0%{opacity:0;transform:translate(0,0) scale(.4)}15%{opacity:1;transform:translate(calc(var(--dx)*.2),-12px) scale(1.1)}100%{opacity:0;transform:translate(var(--dx),-110px) scale(.9)}}
 .petbody{width:76px;height:57px;transition:transform .25s}
 .petbody.flip{transform:scaleX(-1)}
 .petbody svg{width:100%;height:100%;overflow:visible}
@@ -532,9 +536,23 @@ function syncPets(){
     const el=h('div',{class:'pet pet-'+id}, body, h('div',{class:'petname'}, info.name));
     petLayer.append(el);
     const p={el, body, x:20+Math.random()*(innerWidth-110), y:innerHeight*(.3+Math.random()*.55), tm:0, speed: id==='yuna'?28:id==='mira'?62:48};
+    el.addEventListener('pointerdown', e=>{ e.preventDefault(); e.stopPropagation(); petLove(p, e.clientX, e.clientY); });
     el.style.transform=`translate(${p.x}px,${p.y}px)`;
     petEls[id]=p; p.tm=setTimeout(()=>wander(p), 300+Math.random()*1500);
   }
+}
+// Antippen: Herzchen steigen auf, das Tier hüpft vor Freude
+function petLove(p, cx, cy){
+  const hearts=['❤️','💕','💖','💗','💞'];
+  for(let i=0;i<6;i++){
+    const ht=h('div',{class:'heart'}, hearts[rnd(hearts.length)]);
+    ht.style.left=(cx-10+(Math.random()-.5)*40)+'px'; ht.style.top=(cy-14)+'px';
+    ht.style.setProperty('--dx', ((Math.random()-.5)*70)+'px');
+    ht.style.animationDelay=(i*70)+'ms'; ht.style.fontSize=(16+rnd(12))+'px';
+    document.body.append(ht); setTimeout(()=>ht.remove(), 1500+i*70);
+  }
+  p.el.classList.remove('happy'); void p.el.offsetWidth; p.el.classList.add('happy');
+  tone(880,.12,'triangle',.15); setTimeout(()=>tone(1175,.15,'triangle',.15),110); buzz(20);
 }
 function wander(p){
   const W=innerWidth, H=innerHeight;
